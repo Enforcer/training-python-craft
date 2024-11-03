@@ -38,5 +38,4 @@ class PlansFacade:
         stmt = select(Plan).filter(Plan.id == plan_id, Plan.tenant_id == tenant_id)
         plan = self._session.execute(stmt).scalars().one()
         multiplier = 1 if term == Term.MONTHLY else 12
-        new_amount = plan.price.amount * multiplier
-        return Money(amount=new_amount)
+        return plan.price * multiplier

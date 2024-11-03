@@ -64,7 +64,7 @@ class PaymentsFacade:
             payment_intent = self._client.payment_intents.create(
                 params=dict(
                     amount=int(amount.amount * 100),
-                    currency="usd",
+                    currency=amount.currency.lower(),
                     automatic_payment_methods={"enabled": True},
                     customer=customer.stripe_customer_id,
                     payment_method=selected_method_id,

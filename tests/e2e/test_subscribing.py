@@ -58,17 +58,29 @@ def test_subscribing(client: TestClient) -> None:
 
     client.post(
         "/plans",
-        json={"name": "plan1", "price": {"amount": 10.0}, "description": "desc1"},
+        json={
+            "name": "plan1",
+            "price": {"amount": 10.0, "currency": "USD"},
+            "description": "desc1",
+        },
         headers=headers,
     )
     client.post(
         "/plans",
-        json={"name": "plan2", "price": {"amount": 10.0}, "description": "desc1"},
+        json={
+            "name": "plan2",
+            "price": {"amount": 10.0, "currency": "USD"},
+            "description": "desc1",
+        },
         headers=headers,
     )
     client.post(
         "/plans",
-        json={"name": "plan3", "price": {"amount": 20.0}, "description": "desc1"},
+        json={
+            "name": "plan3",
+            "price": {"amount": 20.0, "currency": "USD"},
+            "description": "desc1",
+        },
         headers=headers,
     )
     api_response = client.get("/plans", headers=headers)
@@ -112,7 +124,7 @@ def test_subscribing(client: TestClient) -> None:
 
         with patch.object(
             PaymentIntentService, "create", return_value=payment_intent_mock
-        ):
+        ) as pay_mock:
             subscribe_response = client.post(
                 "/subscriptions",
                 json={
@@ -122,6 +134,10 @@ def test_subscribing(client: TestClient) -> None:
                 },
                 headers=headers,
             )
+            pay_mock.assert_called_once()
+            pay_call_kwargs = pay_mock.mock_calls[0].kwargs["params"]
+            assert pay_call_kwargs["amount"] == 12000
+            assert pay_call_kwargs["currency"] == "usd"
     assert subscribe_response.status_code == 201
 
     api_response = client.get(

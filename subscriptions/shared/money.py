@@ -1,13 +1,49 @@
+import functools
 from decimal import Decimal
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Type, ClassVar
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 from sqlalchemy import types, JSON, Dialect
 
 
+class Currency:
+    iso_code: ClassVar[str]
+    decimal_places: ClassVar[int]
+    __iso_code_to_type: dict[str, Type["Currency"]] = {}
+
+    def __init_subclass__(cls) -> None:
+        cls.__iso_code_to_type[cls.iso_code] = cls
+
+    @classmethod
+    def supported_currencies(cls) -> set[str]:
+        return set(cls.__iso_code_to_type.keys())
+
+    @classmethod
+    def from_iso_code(cls, iso_code: str) -> Type["Currency"]:
+        return cls.__iso_code_to_type[iso_code]
+
+
+class USD(Currency):
+    iso_code = "USD"
+    decimal_places = 2
+
+
+class JPY(Currency):
+    iso_code = "JPY"
+    decimal_places = 0
+
+
+class ETH(Currency):
+    iso_code = "ETH"
+    decimal_places = 24
+
+
+@functools.total_ordering
 class Money:
-    def __init__(self, amount: float | int | Decimal) -> None:
+    def __init__(self, amount: float | int | Decimal, currency: str) -> None:
+        a_currency = Currency.from_iso_code(currency)
+
         if amount < 0:
             raise ValueError(f"Invalid amount: {amount}")
 
@@ -16,16 +52,36 @@ class Money:
         elif isinstance(amount, int):
             amount = Decimal(amount)
 
-        # TODO: we're gonna handle more currencies
-        normalized = amount.quantize(Decimal("0.01"))
+        min_unit = Decimal(str(10**-a_currency.decimal_places))
+        normalized = amount.quantize(min_unit)
         if normalized != amount:
             raise ValueError(f"Invalid amount: {amount}")
 
         self._amount = normalized
+        self._currency = currency
 
     @property
     def amount(self) -> Decimal:
         return self._amount
+
+    @property
+    def currency(self) -> str:
+        return self._currency
+
+    def __mul__(self, other: Any) -> "Money":
+        if isinstance(other, int):
+            return Money(amount=self.amount * other, currency=self.currency)
+
+        raise TypeError(f"Multiplication of Money by {type(other)} is not supported")
+
+    def __le__(self, other: Any) -> bool:
+        if not isinstance(other, Money):
+            raise TypeError(f"Comparison of Money with {type(other)} is not supported")
+
+        if self.currency != other.currency:
+            raise ValueError("Cannot compare money in different currencies")
+
+        return self.amount <= other.amount
 
 
 class MoneyType(types.TypeDecorator[Money]):
@@ -49,13 +105,16 @@ class MoneyType(types.TypeDecorator[Money]):
     def process_bind_param(
         self, value: Money | None, dialect: Dialect
     ) -> dict[str, str] | None:
-        return {"amount": str(value.amount)} if value is not None else None
+        if value is None:
+            return None
+
+        return {"amount": str(value.amount), "currency": value.currency}
 
     def process_result_value(self, value: Any | None, dialect: Dialect) -> Money | None:
         if value is None:
             return None
         as_decimal = Decimal(value["amount"])
-        return Money(amount=as_decimal)
+        return Money(amount=as_decimal, currency=value["currency"])
 
 
 class MoneyAnnotation:
@@ -80,6 +139,7 @@ class MoneyAnnotation:
 
         class _MoneyAsTypedDict(TypedDict):
             amount: float
+            currency: str
 
         from_dict_schema = core_schema.chain_schema(
             [
@@ -87,6 +147,9 @@ class MoneyAnnotation:
                     {
                         "amount": core_schema.typed_dict_field(
                             core_schema.float_schema()
+                        ),
+                        "currency": core_schema.typed_dict_field(
+                            core_schema.str_schema(max_length=3)
                         ),
                     },
                     cls=_MoneyAsTypedDict,
@@ -104,6 +167,9 @@ class MoneyAnnotation:
                 ]
             ),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda instance: {"amount": instance.amount}
+                lambda instance: {
+                    "amount": instance.amount,
+                    "currency": instance.currency,
+                }
             ),
         )
