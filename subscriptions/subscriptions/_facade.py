@@ -100,7 +100,7 @@ class SubscriptionsFacade:
         new_plan_cost = self._plans_facade.calculate_cost(
             tenant_id, new_plan_id, subscription.term
         )
-        if new_plan_cost > old_plan_cost:
+        if new_plan_cost.amount > old_plan_cost.amount:
             # upgrade
             charged = self._payments_facade.charge(account_id, new_plan_cost)
             if not charged:

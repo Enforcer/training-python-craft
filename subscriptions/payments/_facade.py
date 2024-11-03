@@ -6,6 +6,7 @@ from subscriptions.main import payments_settings
 from subscriptions.payments._customer import Customer
 from subscriptions.payments._payment import Payment
 from subscriptions.shared.account_id import AccountId
+from subscriptions.shared.money import Money
 
 
 class ClientSecretUnavailable(ValueError):
@@ -49,7 +50,7 @@ class PaymentsFacade:
             raise ClientSecretUnavailable()
         return setup_intent.client_secret
 
-    def charge(self, account_id: AccountId, amount: float) -> bool:
+    def charge(self, account_id: AccountId, amount: Money) -> bool:
         stmt = select(Customer).filter(Customer.account_id == account_id)
         customer = self._session.execute(stmt).scalars().one()
         methods = self._client.payment_methods.list(
@@ -62,7 +63,7 @@ class PaymentsFacade:
         try:
             payment_intent = self._client.payment_intents.create(
                 params=dict(
-                    amount=int(amount * 100),
+                    amount=int(amount.amount * 100),
                     currency="usd",
                     automatic_payment_methods={"enabled": True},
                     customer=customer.stripe_customer_id,

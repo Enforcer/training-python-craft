@@ -1,4 +1,8 @@
+from typing import Annotated
+
 from pydantic import BaseModel, ConfigDict
+
+from subscriptions.shared.money import MoneyAnnotation, Money
 
 
 class PlanDto(BaseModel):
@@ -6,5 +10,5 @@ class PlanDto(BaseModel):
 
     id: int
     name: str
-    price: float
+    price: Annotated[Money, MoneyAnnotation]
     description: str

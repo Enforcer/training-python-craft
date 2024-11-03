@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends, APIRouter, Response
 from pydantic import BaseModel
 
@@ -5,14 +7,14 @@ from subscriptions.api.multitenancy import extract_tenant_id
 from subscriptions.main import Session
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._facade import PlansFacade
-
+from subscriptions.shared.money import MoneyAnnotation, Money
 
 router = APIRouter()
 
 
 class AddPlan(BaseModel):
     name: str
-    price: float
+    price: Annotated[Money, MoneyAnnotation]
     description: str
 
 

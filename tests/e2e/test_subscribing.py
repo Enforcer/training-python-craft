@@ -58,17 +58,17 @@ def test_subscribing(client: TestClient) -> None:
 
     client.post(
         "/plans",
-        json={"name": "plan1", "price": 10.0, "description": "desc1"},
+        json={"name": "plan1", "price": {"amount": 10.0}, "description": "desc1"},
         headers=headers,
     )
     client.post(
         "/plans",
-        json={"name": "plan2", "price": 10.0, "description": "desc1"},
+        json={"name": "plan2", "price": {"amount": 10.0}, "description": "desc1"},
         headers=headers,
     )
     client.post(
         "/plans",
-        json={"name": "plan3", "price": 20.0, "description": "desc1"},
+        json={"name": "plan3", "price": {"amount": 20.0}, "description": "desc1"},
         headers=headers,
     )
     api_response = client.get("/plans", headers=headers)
