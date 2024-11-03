@@ -195,3 +195,61 @@ def test_subscribing(client: TestClient) -> None:
     assert len(subscriptions) == 1
     assert subscriptions[0]["plan_id"] == plans_response[1]["id"]
     assert subscriptions[0]["pending_change"] is None
+
+
+def test_subscribing_to_add_ons_increases_price(client: TestClient) -> None:
+    headers = {"Authorization": auth_header(1)}
+    # Given: Plan with add-on
+    add_plan_response = client.post(
+        "/plans",
+        json={
+            "name": "plan_with_addon",
+            "price": {"amount": 15.99, "currency": "USD"},
+            "description": "desc1",
+            "add_ons": [
+                {
+                    "name": "extra_screens",
+                    "unit_price": {"amount": 9.99, "currency": "USD"},
+                }
+            ],
+        },
+        headers=headers,
+    )
+    assert add_plan_response.status_code == 200
+    plan_id = add_plan_response.json()["id"]
+
+    # Given: a customer account
+    stripe_customer_mock = Mock(id="cus_123")
+    stripe_setup_intent_mock = Mock(id="si_123")
+    seal(stripe_customer_mock)
+    seal(stripe_setup_intent_mock)
+    with patch.object(CustomerService, "create", return_value=stripe_customer_mock):
+        with patch.object(
+            SetupIntentService, "create", return_value=stripe_setup_intent_mock
+        ):
+            open_account_response = client.post("/accounts", headers=headers)
+    assert open_account_response.status_code == 200
+    account_id = open_account_response.json()["account_id"]
+
+    methods_list_mock = Mock(data=[Mock(id="pm_123")])
+    payment_intent_mock = Mock(id="pi_123")
+    seal(methods_list_mock)
+    with patch.object(PaymentMethodService, "list", return_value=methods_list_mock):
+        with patch.object(
+            PaymentIntentService, "create", return_value=payment_intent_mock
+        ) as pay_mock:
+            subscribe_response = client.post(
+                "/subscriptions",
+                json={
+                    "account_id": account_id,
+                    "plan_id": plan_id,
+                    "term": Term.MONTHLY,
+                    "add_ons": [{"name": "extra_screens", "quantity": 2}],
+                },
+                headers=headers,
+            )
+            pay_mock.assert_called_once()
+            pay_call_kwargs = pay_mock.mock_calls[0].kwargs["params"]
+            assert pay_call_kwargs["amount"] == 3597
+            assert pay_call_kwargs["currency"] == "usd"
+    assert subscribe_response.status_code == 201
