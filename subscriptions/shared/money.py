@@ -74,6 +74,15 @@ class Money:
 
         raise TypeError(f"Multiplication of Money by {type(other)} is not supported")
 
+    def __add__(self, other: Any) -> "Money":
+        if not isinstance(other, Money):
+            raise TypeError(f"Cannot add {type(other)} to Money")
+
+        if other.currency != self.currency:
+            raise ValueError("Cannot add monet in different currencies!")
+
+        return Money(self.amount + other.amount, self.currency)
+
     def __le__(self, other: Any) -> bool:
         if not isinstance(other, Money):
             raise TypeError(f"Comparison of Money with {type(other)} is not supported")

@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
+from subscriptions.plans import RequestedAddOn
 from subscriptions.shared.sqlalchemy import Base, AsJSON
 from subscriptions.shared.term import Term
 
@@ -27,4 +28,7 @@ class Subscription(Base):
     canceled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     pending_change: Mapped[PendingChange | None] = mapped_column(
         AsJSON[PendingChange], default=None
+    )
+    requested_add_ons: Mapped[list[RequestedAddOn]] = mapped_column(
+        AsJSON[list[RequestedAddOn]], default_factory=list
     )

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from subscriptions.api.multitenancy import extract_tenant_id
 from subscriptions.main import Session
 from subscriptions.payments import PaymentsFacade
-from subscriptions.plans import PlansFacade, PlanId
+from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
@@ -19,6 +19,7 @@ class Subscribe(BaseModel):
     account_id: int
     plan_id: int
     term: Term
+    add_ons: list[RequestedAddOn] = Field(default_factory=list)
 
 
 @router.post("/subscriptions", status_code=201)
@@ -35,6 +36,7 @@ def subscribe(
             tenant_id=TenantId(tenant_id),
             plan_id=PlanId(payload.plan_id),
             term=payload.term,
+            add_ons=payload.add_ons,
         )
     except Exception as e:
         raise HTTPException(status_code=500) from e

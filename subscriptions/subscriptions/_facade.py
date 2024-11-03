@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from subscriptions.payments import PaymentsFacade
-from subscriptions.plans import PlansFacade, PlanId
+from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
@@ -36,9 +36,14 @@ class SubscriptionsFacade:
         return [SubscriptionDto.model_validate(sub) for sub in subscriptions]
 
     def subscribe(
-        self, account_id: AccountId, tenant_id: TenantId, plan_id: PlanId, term: Term
+        self,
+        account_id: AccountId,
+        tenant_id: TenantId,
+        plan_id: PlanId,
+        term: Term,
+        add_ons: list[RequestedAddOn],
     ) -> SubscriptionDto:
-        cost = self._plans_facade.calculate_cost(tenant_id, plan_id, term)
+        cost = self._plans_facade.calculate_cost(tenant_id, plan_id, term, add_ons)
         charged = self._payments_facade.charge(account_id, cost)
         if not charged:
             raise Exception("Failed to charge!")
@@ -57,6 +62,7 @@ class SubscriptionsFacade:
             next_renewal_at=next_renewal_at,
             term=term,
             canceled_at=None,
+            requested_add_ons=add_ons,
         )
         self._session.add(subscription)
         self._session.commit()
@@ -95,10 +101,16 @@ class SubscriptionsFacade:
             raise Exception("Cannot change to the same plan!")
 
         old_plan_cost = self._plans_facade.calculate_cost(
-            tenant_id, PlanId(subscription.plan_id), subscription.term
+            tenant_id,
+            PlanId(subscription.plan_id),
+            subscription.term,
+            subscription.requested_add_ons,
         )
         new_plan_cost = self._plans_facade.calculate_cost(
-            tenant_id, new_plan_id, subscription.term
+            tenant_id,
+            new_plan_id,
+            subscription.term,
+            subscription.requested_add_ons,
         )
         if new_plan_cost > old_plan_cost:
             # upgrade
@@ -139,7 +151,10 @@ class SubscriptionsFacade:
                 plan_id = PlanId(subscription.plan_id)
 
             cost = self._plans_facade.calculate_cost(
-                TenantId(subscription.tenant_id), plan_id, subscription.term
+                TenantId(subscription.tenant_id),
+                plan_id,
+                subscription.term,
+                subscription.requested_add_ons,
             )
             charged = self._payments_facade.charge(
                 AccountId(subscription.account_id), cost

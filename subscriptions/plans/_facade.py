@@ -1,6 +1,7 @@
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
+from subscriptions.plans._add_on import AddOn, RequestedAddOn
 from subscriptions.plans._plan_id import PlanId
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._plan import Plan
@@ -13,12 +14,20 @@ class PlansFacade:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def add(self, tenant_id: int, name: str, price: Money, description: str) -> PlanDto:
+    def add(
+        self,
+        tenant_id: int,
+        name: str,
+        price: Money,
+        description: str,
+        add_ons: list[AddOn],
+    ) -> PlanDto:
         plan = Plan(
             tenant_id=tenant_id,
             name=name,
             price=price,
             description=description,
+            add_ons=add_ons,
         )
         self._session.add(plan)
         self._session.commit()
@@ -34,8 +43,25 @@ class PlansFacade:
         self._session.execute(stmt)
         self._session.commit()
 
-    def calculate_cost(self, tenant_id: TenantId, plan_id: PlanId, term: Term) -> Money:
+    def calculate_cost(
+        self,
+        tenant_id: TenantId,
+        plan_id: PlanId,
+        term: Term,
+        add_ons: list[RequestedAddOn],
+    ) -> Money:
         stmt = select(Plan).filter(Plan.id == plan_id, Plan.tenant_id == tenant_id)
         plan = self._session.execute(stmt).scalars().one()
+
+        price = plan.price
+        for requested_add_on in add_ons:
+            corresponding_add_on = next(
+                add_on
+                for add_on in plan.add_ons
+                if add_on.name == requested_add_on.name
+            )
+            add_on_price = corresponding_add_on.unit_price * requested_add_on.quantity
+            price += add_on_price
+
         multiplier = 1 if term == Term.MONTHLY else 12
-        return plan.price * multiplier
+        return price * multiplier

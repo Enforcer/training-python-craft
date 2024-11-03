@@ -1,10 +1,11 @@
 from typing import Annotated
 
 from fastapi import Depends, APIRouter, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from subscriptions.api.multitenancy import extract_tenant_id
 from subscriptions.main import Session
+from subscriptions.plans._add_on import AddOn
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._facade import PlansFacade
 from subscriptions.shared.money import MoneyAnnotation, Money
@@ -16,6 +17,7 @@ class AddPlan(BaseModel):
     name: str
     price: Annotated[Money, MoneyAnnotation]
     description: str
+    add_ons: list[AddOn] = Field(default_factory=list)
 
 
 @router.post("/plans")
@@ -27,6 +29,7 @@ def add_plan(payload: AddPlan, tenant_id: int = Depends(extract_tenant_id)) -> P
         name=payload.name,
         price=payload.price,
         description=payload.description,
+        add_ons=payload.add_ons,
     )
 
 

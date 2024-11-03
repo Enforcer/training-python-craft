@@ -1,8 +1,9 @@
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
+from subscriptions.plans._add_on import AddOn
 from subscriptions.shared.money import MoneyType, Money
-from subscriptions.shared.sqlalchemy import Base
+from subscriptions.shared.sqlalchemy import Base, AsJSON
 
 
 class Plan(Base):
@@ -14,3 +15,4 @@ class Plan(Base):
     name: Mapped[str]
     price: Mapped[Money] = mapped_column(MoneyType)
     description: Mapped[str]
+    add_ons: Mapped[list[AddOn]] = mapped_column(AsJSON[list[AddOn]])
