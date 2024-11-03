@@ -1,0 +1,16 @@
+version: '3.1'
+services:
+  postgres:
+    image: postgres:17
+    ports:
+    - "5432:5432"
+    environment:
+      POSTGRES_USER: subscriptions
+      POSTGRES_PASSWORD: subscriptions
+      POSTGRES_DB: subscriptions
+
+  rabbitmq:
+    image: rabbitmq:4.0.3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"

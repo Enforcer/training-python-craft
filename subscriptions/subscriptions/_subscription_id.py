@@ -1,0 +1,2 @@
+class SubscriptionId(int):
+    pass

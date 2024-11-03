@@ -1,0 +1,2 @@
+class AccountId(int):
+    pass

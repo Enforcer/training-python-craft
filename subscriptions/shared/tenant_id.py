@@ -1,0 +1,2 @@
+class TenantId(int):
+    pass
