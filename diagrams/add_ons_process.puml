@@ -1,0 +1,42 @@
+@startuml
+|Overall process|
+start
+:Understand the feature
+ask additional questions;
+:See BEHAVIOUR changes
+and what does the feature affect;
+:Plan API/UI changes;
+if (API changes incompatible?) then (yes)
+:Plan migration strategy
+and approach to API evolution;
+else (no)
+endif
+group ATDD
+    :Design at least one acceptance test scenario
+    to work in ATDD cycle;
+    :Example:
+    Given plan with an addon
+    When subscribe to plan with addon
+    Then paid for plan and addon;
+end group
+|Coding|
+:Write a test on API level (add plan, subscribe)
+assert payment provider was called with expected price;
+:Extend API of plans endpoints;
+:Save add-ons, extending DB schema and models;
+:Extend API of subscription;
+:Pass add-ons to cost calculation, extending PaymentFacade;
+:Implement logic of calculating price
+(add-on count * unit_price + plan price);
+:Test now is now passing;
+:Refactor if necessary;
+|Overall process|
+repeat
+  :take another requirement
+  or brainstorm possible edge-cases;
+  :keep coding;
+repeat while (have more unmet requirements or unhappy?) is (yes) not (no)
+
+:You're done!;
+stop
+@enduml

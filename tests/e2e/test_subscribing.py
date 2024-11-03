@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Iterator
 from unittest.mock import patch, Mock, seal
 
 import pytest
 import time_machine
+from _pytest.fixtures import SubRequest
 from sqlalchemy import create_engine, text
 from stripe import (
     CardError,
@@ -28,17 +28,21 @@ from subscriptions.subscriptions._facade import SubscriptionsFacade
 
 
 @pytest.fixture(autouse=True)
-def setup_db(tmpdir: Path) -> None:
+def setup_db(request: SubRequest) -> Iterator[None]:
+    db_name = request.node.name
     with engine.connect() as connection:
         connection.execution_options(isolation_level="AUTOCOMMIT")
-        connection.execute(text("DROP DATABASE IF EXISTS tests"))
-        connection.execute(text("CREATE DATABASE tests"))
+        connection.execute(text(f"DROP DATABASE IF EXISTS {db_name}"))
+        connection.execute(text(f"CREATE DATABASE {db_name}"))
 
-    new_url = engine.url.set(database="tests")
+    new_url = engine.url.set(database=db_name)
 
     test_engine = create_engine(new_url, echo=True)
     Session.configure(bind=test_engine)
     Base.metadata.create_all(test_engine)
+    yield
+    test_engine.dispose()
+    Session.remove()
 
 
 @pytest.fixture()
