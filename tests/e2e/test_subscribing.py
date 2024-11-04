@@ -26,6 +26,7 @@ from subscriptions.plans._repository import PlansRepository
 from subscriptions.shared.sqlalchemy import Base
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions._facade import SubscriptionsFacade
+from subscriptions.subscriptions._repository import SubscriptionsRepository
 
 
 @pytest.fixture(autouse=True)
@@ -187,6 +188,7 @@ def test_subscribing(client: TestClient) -> None:
                 session = Session()
                 facade = SubscriptionsFacade(
                     session,
+                    SubscriptionsRepository(session),
                     PaymentsFacade(session),
                     PlansFacade(session, PlansRepository(session)),
                 )

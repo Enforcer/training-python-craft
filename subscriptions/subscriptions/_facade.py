@@ -1,6 +1,3 @@
-from datetime import datetime, timezone
-
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from subscriptions.auth import requires_role, Subject
@@ -9,11 +6,11 @@ from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
+from subscriptions.subscriptions._repository import SubscriptionsRepository
 from subscriptions.subscriptions._role_objects import (
     SubscriptionsViewer,
     SubscriptionsAdmin,
 )
-from subscriptions.subscriptions._subscription import Subscription
 from subscriptions.subscriptions._subscription_dto import SubscriptionDto
 from subscriptions.subscriptions._subscription_factory import build_new
 from subscriptions.subscriptions._subscription_id import SubscriptionId
@@ -23,10 +20,12 @@ class SubscriptionsFacade:
     def __init__(
         self,
         session: Session,
+        repository: SubscriptionsRepository,
         payments_facade: PaymentsFacade,
         plans_facade: PlansFacade,
     ) -> None:
         self._session = session
+        self._repository = repository
         self._payments_facade = payments_facade
         self._plans_facade = plans_facade
 
@@ -34,11 +33,7 @@ class SubscriptionsFacade:
     def subscriptions(
         self, subject: Subject, account_id: AccountId
     ) -> list[SubscriptionDto]:
-        stmt = select(Subscription).filter(
-            Subscription.account_id == account_id,
-            Subscription.tenant_id == subject.tenant_id,
-        )
-        subscriptions = self._session.execute(stmt).scalars().all()
+        subscriptions = self._repository.get_all(subject.tenant_id, account_id)
         return [SubscriptionDto.model_validate(sub) for sub in subscriptions]
 
     @requires_role(SubscriptionsAdmin)
@@ -58,7 +53,7 @@ class SubscriptionsFacade:
             raise Exception("Failed to charge!")
 
         subscription = build_new(account_id, subject.tenant_id, plan_id, term, add_ons)
-        self._session.add(subscription)
+        self._repository.add(subscription)
         self._session.commit()
         return SubscriptionDto.model_validate(subscription)
 
@@ -68,12 +63,7 @@ class SubscriptionsFacade:
         tenant_id: TenantId,
         subscription_id: SubscriptionId,
     ) -> None:
-        stmt = select(Subscription).filter(
-            Subscription.account_id == account_id,
-            Subscription.tenant_id == tenant_id,
-            Subscription.id == subscription_id,
-        )
-        subscription = self._session.execute(stmt).scalars().one()
+        subscription = self._repository.get(tenant_id, account_id, subscription_id)
         subscription.cancel()
         self._session.commit()
 
@@ -84,12 +74,9 @@ class SubscriptionsFacade:
         new_plan_id: PlanId,
         subscription_id: SubscriptionId,
     ) -> SubscriptionDto:
-        stmt = select(Subscription).filter(
-            Subscription.account_id == account_id,
-            Subscription.tenant_id == subject.tenant_id,
-            Subscription.id == subscription_id,
+        subscription = self._repository.get(
+            subject.tenant_id, account_id, subscription_id
         )
-        subscription = self._session.execute(stmt).scalars().one()
         if subscription.plan_id == new_plan_id:
             raise Exception("Cannot change to the same plan!")
 
@@ -120,12 +107,7 @@ class SubscriptionsFacade:
         return SubscriptionDto.model_validate(subscription)
 
     def renew_subscriptions(self) -> None:
-        now = datetime.now(timezone.utc)
-        stmt = select(Subscription).filter(
-            Subscription.next_renewal_at <= now,
-            Subscription.status == "active",
-        )
-        subscriptions = self._session.execute(stmt).scalars().all()
+        subscriptions = self._repository.get_all_pending_renewal()
         for subscription in subscriptions:
             renewal = subscription.get_renewal()
 
