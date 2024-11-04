@@ -4,11 +4,16 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from subscriptions.auth import requires_role, Subject
 from subscriptions.payments import PaymentsFacade
 from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
+from subscriptions.subscriptions._role_objects import (
+    SubscriptionsViewer,
+    SubscriptionsAdmin,
+)
 from subscriptions.subscriptions._subscription import Subscription, PendingChange
 from subscriptions.subscriptions._subscription_dto import SubscriptionDto
 from subscriptions.subscriptions._subscription_id import SubscriptionId
@@ -25,25 +30,29 @@ class SubscriptionsFacade:
         self._payments_facade = payments_facade
         self._plans_facade = plans_facade
 
+    @requires_role(SubscriptionsViewer)
     def subscriptions(
-        self, account_id: AccountId, tenant_id: TenantId
+        self, subject: Subject, account_id: AccountId
     ) -> list[SubscriptionDto]:
         stmt = select(Subscription).filter(
             Subscription.account_id == account_id,
-            Subscription.tenant_id == tenant_id,
+            Subscription.tenant_id == subject.tenant_id,
         )
         subscriptions = self._session.execute(stmt).scalars().all()
         return [SubscriptionDto.model_validate(sub) for sub in subscriptions]
 
+    @requires_role(SubscriptionsAdmin)
     def subscribe(
         self,
+        subject: Subject,
         account_id: AccountId,
-        tenant_id: TenantId,
         plan_id: PlanId,
         term: Term,
         add_ons: list[RequestedAddOn],
     ) -> SubscriptionDto:
-        cost = self._plans_facade.calculate_cost(tenant_id, plan_id, term, add_ons)
+        cost = self._plans_facade.calculate_cost(
+            subject.tenant_id, plan_id, term, add_ons
+        )
         charged = self._payments_facade.charge(account_id, cost)
         if not charged:
             raise Exception("Failed to charge!")
@@ -55,7 +64,7 @@ class SubscriptionsFacade:
         next_renewal_at = now + next_renewal_delta
         subscription = Subscription(
             account_id=account_id,
-            tenant_id=tenant_id,
+            tenant_id=subject.tenant_id,
             plan_id=plan_id,
             status="active",
             subscribed_at=now,
@@ -86,14 +95,14 @@ class SubscriptionsFacade:
 
     def change_plan(
         self,
+        subject: Subject,
         account_id: AccountId,
-        tenant_id: TenantId,
         new_plan_id: PlanId,
         subscription_id: SubscriptionId,
     ) -> SubscriptionDto:
         stmt = select(Subscription).filter(
             Subscription.account_id == account_id,
-            Subscription.tenant_id == tenant_id,
+            Subscription.tenant_id == subject.tenant_id,
             Subscription.id == subscription_id,
         )
         subscription = self._session.execute(stmt).scalars().one()
@@ -101,13 +110,13 @@ class SubscriptionsFacade:
             raise Exception("Cannot change to the same plan!")
 
         old_plan_cost = self._plans_facade.calculate_cost(
-            tenant_id,
+            subject.tenant_id,
             PlanId(subscription.plan_id),
             subscription.term,
             subscription.requested_add_ons,
         )
         new_plan_cost = self._plans_facade.calculate_cost(
-            tenant_id,
+            subject.tenant_id,
             new_plan_id,
             subscription.term,
             subscription.requested_add_ons,

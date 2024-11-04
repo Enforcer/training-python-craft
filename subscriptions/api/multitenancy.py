@@ -1,6 +1,7 @@
 from fastapi import Request, HTTPException
 from subscriptions.api import jwt
 from subscriptions.auth import Subject, Role
+from subscriptions.shared.tenant_id import TenantId
 
 
 def extract_tenant_id(request: Request) -> int:
@@ -30,6 +31,7 @@ def subject(request: Request) -> Subject:
             roles.add(PlansViewer())
             roles.add(SubscriptionsViewer())
 
-        return Subject(tenant_id=decoded.tenant_id, roles=list(roles))
+        tenant_id = TenantId(decoded.tenant_id)
+        return Subject(tenant_id=tenant_id, roles=list(roles))
     else:
         raise HTTPException(status_code=401, detail="Unauthorized")

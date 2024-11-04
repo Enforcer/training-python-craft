@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from subscriptions.api.multitenancy import extract_tenant_id
+from subscriptions.api.multitenancy import subject
+from subscriptions.auth import Subject
 from subscriptions.main import Session
 from subscriptions.payments import PaymentsFacade
 from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
-from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions._facade import SubscriptionsFacade
 from subscriptions.subscriptions._subscription_dto import SubscriptionDto
@@ -24,7 +24,7 @@ class Subscribe(BaseModel):
 
 @router.post("/subscriptions", status_code=201)
 def subscribe(
-    payload: Subscribe, tenant_id: int = Depends(extract_tenant_id)
+    payload: Subscribe, subject: Subject = Depends(subject)
 ) -> SubscriptionDto:
     session = Session()
     payments_facade = PaymentsFacade(session=session)
@@ -32,8 +32,8 @@ def subscribe(
     facade = SubscriptionsFacade(session, payments_facade, plans_facade)
     try:
         return facade.subscribe(
+            subject=subject,
             account_id=AccountId(payload.account_id),
-            tenant_id=TenantId(tenant_id),
             plan_id=PlanId(payload.plan_id),
             term=payload.term,
             add_ons=payload.add_ons,
@@ -44,15 +44,15 @@ def subscribe(
 
 @router.get("/subscriptions")
 def get_subscriptions(
-    account_id: int, tenant_id: int = Depends(extract_tenant_id)
+    account_id: int, subject: Subject = Depends(subject)
 ) -> list[SubscriptionDto]:
     session = Session()
     payments_facade = PaymentsFacade(session=session)
     plans_facade = PlansFacade(session=session)
     facade = SubscriptionsFacade(session, payments_facade, plans_facade)
     return facade.subscriptions(
+        subject=subject,
         account_id=AccountId(account_id),
-        tenant_id=TenantId(tenant_id),
     )
 
 
@@ -65,15 +65,15 @@ class ChangePlanPayload(BaseModel):
 def change_plan(
     subscription_id: int,
     payload: ChangePlanPayload,
-    tenant_id: int = Depends(extract_tenant_id),
+    subject: Subject = Depends(subject),
 ) -> SubscriptionDto:
     session = Session()
     payments_facade = PaymentsFacade(session=session)
     plans_facade = PlansFacade(session=session)
     facade = SubscriptionsFacade(session, payments_facade, plans_facade)
     return facade.change_plan(
+        subject=subject,
         account_id=AccountId(payload.account_id),
-        tenant_id=TenantId(tenant_id),
         subscription_id=SubscriptionId(subscription_id),
         new_plan_id=PlanId(payload.new_plan_id),
     )
