@@ -4,18 +4,10 @@ from subscriptions.auth import Subject, Role
 from subscriptions.shared.tenant_id import TenantId
 
 
-def extract_tenant_id(request: Request) -> int:
-    if auth_header := request.headers.get("Authorization"):
-        _token_type, token = auth_header.split(maxsplit=1)
-        decoded = jwt.decode(token)
-        return decoded.tenant_id
-    else:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-
 def subject(request: Request) -> Subject:
     from subscriptions.plans import PlansViewer, PlansAdmin
     from subscriptions.subscriptions import SubscriptionsViewer, SubscriptionsAdmin
+    from subscriptions.accounts import AccountsAdmin
 
     if auth_header := request.headers.get("Authorization"):
         _token_type, token = auth_header.split(maxsplit=1)
@@ -26,6 +18,7 @@ def subject(request: Request) -> Subject:
             roles.add(PlansAdmin())
             roles.add(SubscriptionsViewer())
             roles.add(SubscriptionsAdmin())
+            roles.add(AccountsAdmin())
 
         if "viewer" in decoded.roles:
             roles.add(PlansViewer())
