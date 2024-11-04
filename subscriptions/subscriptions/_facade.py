@@ -14,7 +14,7 @@ from subscriptions.subscriptions._role_objects import (
     SubscriptionsViewer,
     SubscriptionsAdmin,
 )
-from subscriptions.subscriptions._subscription import Subscription, PendingChange
+from subscriptions.subscriptions._subscription import Subscription
 from subscriptions.subscriptions._subscription_dto import SubscriptionDto
 from subscriptions.subscriptions._subscription_id import SubscriptionId
 
@@ -126,19 +126,10 @@ class SubscriptionsFacade:
             if not charged:
                 raise Exception("Failed to charge!")
 
-            subscription.plan_id = new_plan_id
-            now = datetime.now(timezone.utc)
-            subscription.subscribed_at = now
-            next_renewal_delta = (
-                relativedelta(months=1)
-                if subscription.term == Term.MONTHLY
-                else relativedelta(years=1)
-            )
-            next_renewal_at = now + next_renewal_delta
-            subscription.next_renewal_at = next_renewal_at
+            subscription.upgrade(new_plan_id)
         else:
             # downgrade
-            subscription.pending_change = PendingChange(new_plan_id=new_plan_id)
+            subscription.downgrade(new_plan_id)
 
         self._session.commit()
         return SubscriptionDto.model_validate(subscription)

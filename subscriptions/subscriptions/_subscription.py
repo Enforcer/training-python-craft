@@ -74,3 +74,18 @@ class Subscription(Base):
         if self.pending_change is not None:
             self.plan_id = self.pending_change.new_plan_id
             self.pending_change = None
+
+    def upgrade(self, new_plan_id: PlanId) -> None:
+        self.plan_id = int(new_plan_id)
+        now = datetime.now(timezone.utc)
+        self.subscribed_at = now
+        next_renewal_delta = (
+            relativedelta(months=1)
+            if self.term == Term.MONTHLY
+            else relativedelta(years=1)
+        )
+        next_renewal_at = now + next_renewal_delta
+        self.next_renewal_at = next_renewal_at
+
+    def downgrade(self, new_plan_id: PlanId) -> None:
+        self.pending_change = PendingChange(new_plan_id=new_plan_id)
