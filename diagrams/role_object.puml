@@ -1,0 +1,21 @@
+@startuml
+
+abstract class RoleObject
+
+Subject o-- RoleObject
+
+class Subject {
+    tenant_id: TenantId
+    get_role_or_raise(Type[Role]) -> Role
+}
+
+RoleObject <|-- PlanViewer
+RoleObject <|-- PlanAdmin
+
+PlanViewer : extra_state_if_needed
+PlanViewer : extra_method_if_needed()
+
+PlanAdmin : extra_state_if_needed
+PlanAdmin : extra_method_if_needed()
+
+@enduml
