@@ -9,13 +9,13 @@ from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._renewal_calculation import calculate_next_renewal
 from subscriptions.subscriptions._role_objects import (
     SubscriptionsViewer,
     SubscriptionsAdmin,
 )
 from subscriptions.subscriptions._subscription import Subscription
 from subscriptions.subscriptions._subscription_dto import SubscriptionDto
+from subscriptions.subscriptions._subscription_factory import build_new
 from subscriptions.subscriptions._subscription_id import SubscriptionId
 
 
@@ -57,19 +57,7 @@ class SubscriptionsFacade:
         if not charged:
             raise Exception("Failed to charge!")
 
-        now = datetime.now(timezone.utc)
-        next_renewal_at = calculate_next_renewal(now, term)
-        subscription = Subscription(
-            account_id=account_id,
-            tenant_id=subject.tenant_id,
-            plan_id=plan_id,
-            status="active",
-            subscribed_at=now,
-            next_renewal_at=next_renewal_at,
-            term=term,
-            canceled_at=None,
-            requested_add_ons=add_ons,
-        )
+        subscription = build_new(account_id, subject.tenant_id, plan_id, term, add_ons)
         self._session.add(subscription)
         self._session.commit()
         return SubscriptionDto.model_validate(subscription)
