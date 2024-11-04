@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from subscriptions.plans import RequestedAddOn
+from subscriptions.plans import RequestedAddOn, PlanId
 from subscriptions.shared.sqlalchemy import Base, AsJSON
 from subscriptions.shared.term import Term
 
@@ -12,6 +13,13 @@ from subscriptions.shared.term import Term
 @dataclass(frozen=True)
 class PendingChange:
     new_plan_id: int
+
+
+@dataclass(frozen=True)
+class Renewal:
+    plan_id: PlanId
+    term: Term
+    requested_add_ons: list[RequestedAddOn]
 
 
 class Subscription(Base):
@@ -39,3 +47,30 @@ class Subscription(Base):
 
         self.status = "canceled"
         self.canceled_at = datetime.now(timezone.utc)
+
+    def get_renewal(self) -> Renewal:
+        if self.pending_change is not None:
+            plan_id = PlanId(self.pending_change.new_plan_id)
+        else:
+            plan_id = PlanId(self.plan_id)
+
+        return Renewal(
+            plan_id,
+            self.term,
+            self.requested_add_ons,
+        )
+
+    def renewal_failed(self) -> None:
+        self.status = "inactive"
+
+    def renewal_successful(self) -> None:
+        now = datetime.now(timezone.utc)
+        next_renewal_delta = (
+            relativedelta(months=1)
+            if self.term == Term.MONTHLY
+            else relativedelta(years=1)
+        )
+        self.next_renewal_at = now + next_renewal_delta
+        if self.pending_change is not None:
+            self.plan_id = self.pending_change.new_plan_id
+            self.pending_change = None

@@ -151,30 +151,20 @@ class SubscriptionsFacade:
         )
         subscriptions = self._session.execute(stmt).scalars().all()
         for subscription in subscriptions:
-            if subscription.pending_change is not None:
-                plan_id = PlanId(subscription.pending_change.new_plan_id)
-                subscription.plan_id = subscription.pending_change.new_plan_id
-                subscription.pending_change = None
-            else:
-                plan_id = PlanId(subscription.plan_id)
+            renewal = subscription.get_renewal()
 
             cost = self._plans_facade.calculate_cost(
                 TenantId(subscription.tenant_id),
-                plan_id,
-                subscription.term,
-                subscription.requested_add_ons,
+                renewal.plan_id,
+                renewal.term,
+                renewal.requested_add_ons,
             )
             charged = self._payments_facade.charge(
                 AccountId(subscription.account_id), cost
             )
-            if not charged:
-                subscription.status = "inactive"
+            if charged:
+                subscription.renewal_successful()
             else:
-                next_renewal_delta = (
-                    relativedelta(months=1)
-                    if subscription.term == Term.MONTHLY
-                    else relativedelta(years=1)
-                )
-                subscription.next_renewal_at = now + next_renewal_delta
+                subscription.renewal_failed()
 
         self._session.commit()
