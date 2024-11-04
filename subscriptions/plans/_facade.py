@@ -9,6 +9,7 @@ from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
 from subscriptions.plans._plan_id import PlanId
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._plan import Plan
+from subscriptions.plans._repository import PlansRepository
 from subscriptions.plans._role_objects import PlansAdmin, PlansViewer
 from subscriptions.shared.money import Money
 from subscriptions.shared.tenant_id import TenantId
@@ -16,8 +17,9 @@ from subscriptions.shared.term import Term
 
 
 class PlansFacade:
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, repository: PlansRepository) -> None:
         self._session = session
+        self._repository = repository
 
     @requires_role(PlansAdmin)
     def add(
@@ -35,14 +37,13 @@ class PlansFacade:
             description=description,
             add_ons=add_ons,
         )
-        self._session.add(plan)
+        self._repository.add(plan)
         self._session.commit()
         return PlanDto.model_validate(plan)
 
     @requires_role(PlansViewer)
     def get_all(self, subject: Subject) -> list[PlanDto]:
-        stmt = select(Plan).filter(Plan.tenant_id == subject.tenant_id)
-        plans = self._session.execute(stmt).scalars().all()
+        plans = self._repository.get_all(subject.tenant_id)
         return [PlanDto.model_validate(plan) for plan in plans]
 
     @requires_role(PlansAdmin)

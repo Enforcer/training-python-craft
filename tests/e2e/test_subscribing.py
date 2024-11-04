@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 
 from subscriptions.payments import PaymentsFacade
 from subscriptions.plans import PlansFacade
+from subscriptions.plans._repository import PlansRepository
 from subscriptions.shared.sqlalchemy import Base
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions._facade import SubscriptionsFacade
@@ -185,7 +186,9 @@ def test_subscribing(client: TestClient) -> None:
             with time_machine.travel(renewal_at):
                 session = Session()
                 facade = SubscriptionsFacade(
-                    session, PaymentsFacade(session), PlansFacade(session)
+                    session,
+                    PaymentsFacade(session),
+                    PlansFacade(session, PlansRepository(session)),
                 )
                 facade.renew_subscriptions()
 

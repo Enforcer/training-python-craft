@@ -6,6 +6,7 @@ from subscriptions.auth import Subject
 from subscriptions.main import Session
 from subscriptions.payments import PaymentsFacade
 from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
+from subscriptions.plans._repository import PlansRepository
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions._facade import SubscriptionsFacade
@@ -28,7 +29,7 @@ def subscribe(
 ) -> SubscriptionDto:
     session = Session()
     payments_facade = PaymentsFacade(session=session)
-    plans_facade = PlansFacade(session=session)
+    plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
     facade = SubscriptionsFacade(session, payments_facade, plans_facade)
     try:
         return facade.subscribe(
@@ -48,7 +49,7 @@ def get_subscriptions(
 ) -> list[SubscriptionDto]:
     session = Session()
     payments_facade = PaymentsFacade(session=session)
-    plans_facade = PlansFacade(session=session)
+    plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
     facade = SubscriptionsFacade(session, payments_facade, plans_facade)
     return facade.subscriptions(
         subject=subject,
@@ -69,7 +70,7 @@ def change_plan(
 ) -> SubscriptionDto:
     session = Session()
     payments_facade = PaymentsFacade(session=session)
-    plans_facade = PlansFacade(session=session)
+    plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
     facade = SubscriptionsFacade(session, payments_facade, plans_facade)
     return facade.change_plan(
         subject=subject,
