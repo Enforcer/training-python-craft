@@ -8,3 +8,6 @@ from subscriptions.shared.money import Money, MoneyAnnotation
 class FlatPriceAddOn:
     name: str
     flat_price: Annotated[Money, MoneyAnnotation]
+
+    def calculate_price(self, quantity: int) -> Money:
+        return self.flat_price

@@ -1,0 +1,2 @@
+class RequestedAddOnNotFound(Exception):
+    pass

@@ -55,26 +55,4 @@ class PlansFacade:
     ) -> Money:
         stmt = select(Plan).filter(Plan.id == plan_id, Plan.tenant_id == tenant_id)
         plan = self._session.execute(stmt).scalars().one()
-
-        price = plan.price
-        for requested_add_on in add_ons:
-            corresponding_add_on = next(
-                add_on
-                for add_on in plan.add_ons
-                if add_on.name == requested_add_on.name
-            )
-            if isinstance(corresponding_add_on, UnitPriceAddOn):
-                add_on_price = (
-                    corresponding_add_on.unit_price * requested_add_on.quantity
-                )
-            elif isinstance(corresponding_add_on, FlatPriceAddOn):
-                add_on_price = corresponding_add_on.flat_price
-            elif isinstance(corresponding_add_on, TieredAddOn):
-                add_on_price = corresponding_add_on.tiers[requested_add_on.quantity]
-            else:
-                raise Exception("Impossible")
-
-            price += add_on_price
-
-        multiplier = 1 if term == Term.MONTHLY else 12
-        return price * multiplier
+        return plan.calculate_cost(term, add_ons)
