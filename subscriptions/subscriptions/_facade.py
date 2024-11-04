@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-from dateutil.relativedelta import relativedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,6 +9,7 @@ from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
+from subscriptions.subscriptions._renewal_calculation import calculate_next_renewal
 from subscriptions.subscriptions._role_objects import (
     SubscriptionsViewer,
     SubscriptionsAdmin,
@@ -58,10 +58,7 @@ class SubscriptionsFacade:
             raise Exception("Failed to charge!")
 
         now = datetime.now(timezone.utc)
-        next_renewal_delta = (
-            relativedelta(months=1) if term == Term.MONTHLY else relativedelta(years=1)
-        )
-        next_renewal_at = now + next_renewal_delta
+        next_renewal_at = calculate_next_renewal(now, term)
         subscription = Subscription(
             account_id=account_id,
             tenant_id=subject.tenant_id,

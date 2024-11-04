@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from dateutil.relativedelta import relativedelta
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from subscriptions.plans import RequestedAddOn, PlanId
 from subscriptions.shared.sqlalchemy import Base, AsJSON
 from subscriptions.shared.term import Term
+from subscriptions.subscriptions._renewal_calculation import calculate_next_renewal
 
 
 @dataclass(frozen=True)
@@ -65,12 +65,7 @@ class Subscription(Base):
 
     def renewal_successful(self) -> None:
         now = datetime.now(timezone.utc)
-        next_renewal_delta = (
-            relativedelta(months=1)
-            if self.term == Term.MONTHLY
-            else relativedelta(years=1)
-        )
-        self.next_renewal_at = now + next_renewal_delta
+        self.next_renewal_at = calculate_next_renewal(now, self.term)
         if self.pending_change is not None:
             self.plan_id = self.pending_change.new_plan_id
             self.pending_change = None
@@ -79,12 +74,7 @@ class Subscription(Base):
         self.plan_id = int(new_plan_id)
         now = datetime.now(timezone.utc)
         self.subscribed_at = now
-        next_renewal_delta = (
-            relativedelta(months=1)
-            if self.term == Term.MONTHLY
-            else relativedelta(years=1)
-        )
-        next_renewal_at = now + next_renewal_delta
+        next_renewal_at = calculate_next_renewal(now, self.term)
         self.next_renewal_at = next_renewal_at
 
     def downgrade(self, new_plan_id: PlanId) -> None:
