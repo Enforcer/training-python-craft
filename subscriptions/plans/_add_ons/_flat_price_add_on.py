@@ -5,12 +5,6 @@ from subscriptions.shared.money import Money, MoneyAnnotation
 
 
 @dataclass(frozen=True)
-class AddOn:
+class FlatPriceAddOn:
     name: str
-    unit_price: Annotated[Money, MoneyAnnotation]
-
-
-@dataclass(frozen=True)
-class RequestedAddOn:
-    name: str
-    quantity: int
+    flat_price: Annotated[Money, MoneyAnnotation]

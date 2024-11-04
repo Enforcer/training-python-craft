@@ -210,12 +210,24 @@ def test_subscribing_to_add_ons_increases_price(client: TestClient) -> None:
                 {
                     "name": "extra_screens",
                     "unit_price": {"amount": 9.99, "currency": "USD"},
-                }
+                },
+                {
+                    "name": "quality_4k",
+                    "flat_price": {"amount": 12.99, "currency": "USD"},
+                },
+                {
+                    "name": "extra_members",
+                    "tiers": {
+                        1: {"amount": 9.99, "currency": "USD"},
+                        3: {"amount": 19.99, "currency": "USD"},
+                        5: {"amount": 30.99, "currency": "USD"},
+                    },
+                },
             ],
         },
         headers=headers,
     )
-    assert add_plan_response.status_code == 200
+    assert add_plan_response.status_code == 200, add_plan_response.json()
     plan_id = add_plan_response.json()["id"]
 
     # Given: a customer account
@@ -244,12 +256,16 @@ def test_subscribing_to_add_ons_increases_price(client: TestClient) -> None:
                     "account_id": account_id,
                     "plan_id": plan_id,
                     "term": Term.MONTHLY,
-                    "add_ons": [{"name": "extra_screens", "quantity": 2}],
+                    "add_ons": [
+                        {"name": "extra_screens", "quantity": 2},
+                        {"name": "quality_4k", "quantity": 1},
+                        {"name": "extra_members", "quantity": 5},
+                    ],
                 },
                 headers=headers,
             )
             pay_mock.assert_called_once()
             pay_call_kwargs = pay_mock.mock_calls[0].kwargs["params"]
-            assert pay_call_kwargs["amount"] == 3597
+            assert pay_call_kwargs["amount"] == 7995
             assert pay_call_kwargs["currency"] == "usd"
     assert subscribe_response.status_code == 201

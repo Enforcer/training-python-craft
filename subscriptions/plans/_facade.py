@@ -1,7 +1,10 @@
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
-from subscriptions.plans._add_on import AddOn, RequestedAddOn
+from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
+from subscriptions.plans._add_ons._requested_add_on import RequestedAddOn
+from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
+from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
 from subscriptions.plans._plan_id import PlanId
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._plan import Plan
@@ -20,7 +23,7 @@ class PlansFacade:
         name: str,
         price: Money,
         description: str,
-        add_ons: list[AddOn],
+        add_ons: list[UnitPriceAddOn | FlatPriceAddOn | TieredAddOn],
     ) -> PlanDto:
         plan = Plan(
             tenant_id=tenant_id,
@@ -60,7 +63,17 @@ class PlansFacade:
                 for add_on in plan.add_ons
                 if add_on.name == requested_add_on.name
             )
-            add_on_price = corresponding_add_on.unit_price * requested_add_on.quantity
+            if isinstance(corresponding_add_on, UnitPriceAddOn):
+                add_on_price = (
+                    corresponding_add_on.unit_price * requested_add_on.quantity
+                )
+            elif isinstance(corresponding_add_on, FlatPriceAddOn):
+                add_on_price = corresponding_add_on.flat_price
+            elif isinstance(corresponding_add_on, TieredAddOn):
+                add_on_price = corresponding_add_on.tiers[requested_add_on.quantity]
+            else:
+                raise Exception("Impossible")
+
             price += add_on_price
 
         multiplier = 1 if term == Term.MONTHLY else 12

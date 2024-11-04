@@ -5,7 +5,9 @@ from pydantic import BaseModel, Field
 
 from subscriptions.api.multitenancy import extract_tenant_id
 from subscriptions.main import Session
-from subscriptions.plans._add_on import AddOn
+from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
+from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
+from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._facade import PlansFacade
 from subscriptions.shared.money import MoneyAnnotation, Money
@@ -17,7 +19,9 @@ class AddPlan(BaseModel):
     name: str
     price: Annotated[Money, MoneyAnnotation]
     description: str
-    add_ons: list[AddOn] = Field(default_factory=list)
+    add_ons: list[UnitPriceAddOn | FlatPriceAddOn | TieredAddOn] = Field(
+        default_factory=list
+    )
 
 
 @router.post("/plans")

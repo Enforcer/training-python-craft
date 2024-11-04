@@ -1,4 +1,4 @@
-from subscriptions.plans._add_on import RequestedAddOn
+from subscriptions.plans._add_ons._requested_add_on import RequestedAddOn
 from subscriptions.plans._views import router as plans_router
 from subscriptions.plans._facade import PlansFacade
 from subscriptions.plans._plan_dto import PlanDto
