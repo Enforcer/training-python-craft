@@ -92,6 +92,15 @@ class Money:
 
         return self.amount <= other.amount
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Money):
+            return False
+
+        return (other.amount, other.currency) == (self.amount, other.currency)
+
+    def __repr__(self) -> str:
+        return f"Money({repr(self.amount)}, {repr(self.currency)})"
+
 
 class MoneyType(types.TypeDecorator[Money]):
     """Adapter for SQLAlchemy that enables storing Money instances in JSON column.

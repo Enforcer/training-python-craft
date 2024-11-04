@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Annotated
 
+from subscriptions.plans._add_ons._invalid_tier_requested import InvalidTierRequested
 from subscriptions.shared.money import Money, MoneyAnnotation
 
 
@@ -10,4 +11,7 @@ class TieredAddOn:
     tiers: dict[int, Annotated[Money, MoneyAnnotation]]
 
     def calculate_price(self, quantity: int) -> Money:
-        return self.tiers[quantity]
+        try:
+            return self.tiers[quantity]
+        except KeyError:
+            raise InvalidTierRequested(self.name, quantity, list(self.tiers.keys()))
