@@ -89,8 +89,7 @@ class SubscriptionsFacade:
             Subscription.id == subscription_id,
         )
         subscription = self._session.execute(stmt).scalars().one()
-        subscription.status = "canceled"
-        subscription.canceled_at = datetime.now(timezone.utc)
+        subscription.cancel()
         self._session.commit()
 
     def change_plan(

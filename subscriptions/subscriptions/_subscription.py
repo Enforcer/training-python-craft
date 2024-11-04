@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
@@ -32,3 +32,10 @@ class Subscription(Base):
     requested_add_ons: Mapped[list[RequestedAddOn]] = mapped_column(
         AsJSON[list[RequestedAddOn]], default_factory=list
     )
+
+    def cancel(self) -> None:
+        if self.status == "canceled":
+            return
+
+        self.status = "canceled"
+        self.canceled_at = datetime.now(timezone.utc)
