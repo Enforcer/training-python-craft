@@ -12,4 +12,9 @@ wheels/
 # sqlite db
 *.db
 
+# my samples
 sandbox/
+
+# coverage info
+.coverage
+

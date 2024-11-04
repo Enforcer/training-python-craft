@@ -3,7 +3,8 @@ from typing import Annotated
 from fastapi import Depends, APIRouter, Response
 from pydantic import BaseModel, Field
 
-from subscriptions.api.multitenancy import extract_tenant_id
+from subscriptions.api.multitenancy import subject
+from subscriptions.auth import Subject
 from subscriptions.main import Session
 from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
 from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
@@ -25,11 +26,11 @@ class AddPlan(BaseModel):
 
 
 @router.post("/plans")
-def add_plan(payload: AddPlan, tenant_id: int = Depends(extract_tenant_id)) -> PlanDto:
+def add_plan(payload: AddPlan, subject: Subject = Depends(subject)) -> PlanDto:
     session = Session()
     plans = PlansFacade(session=session)
     return plans.add(
-        tenant_id,
+        subject,
         name=payload.name,
         price=payload.price,
         description=payload.description,
@@ -38,15 +39,15 @@ def add_plan(payload: AddPlan, tenant_id: int = Depends(extract_tenant_id)) -> P
 
 
 @router.get("/plans")
-def get_plans(tenant_id: int = Depends(extract_tenant_id)) -> list[PlanDto]:
+def get_plans(subject: Subject = Depends(subject)) -> list[PlanDto]:
     session = Session()
     plans = PlansFacade(session=session)
-    return plans.get_all(tenant_id)
+    return plans.get_all(subject)
 
 
 @router.delete("/plans/{plan_id}")
-def delete_plan(plan_id: int, tenant_id: int = Depends(extract_tenant_id)) -> Response:
+def delete_plan(plan_id: int, subject: Subject = Depends(subject)) -> Response:
     session = Session()
     plans = PlansFacade(session=session)
-    plans.delete(tenant_id, plan_id)
+    plans.delete(subject, plan_id)
     return Response(status_code=204)

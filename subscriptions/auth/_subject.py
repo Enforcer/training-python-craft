@@ -1,5 +1,6 @@
 from typing import Type
 
+from subscriptions.auth._forbidden import Forbidden
 from subscriptions.auth._role import Role
 
 
@@ -14,4 +15,7 @@ class Subject:
 
     def get_role_or_raise(self, role_type: Type[Role]) -> Role:
         """Raises forbidden if role of a given type not found."""
-        pass
+        try:
+            return self._roles[role_type]
+        except KeyError:
+            raise Forbidden

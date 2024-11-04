@@ -1,6 +1,6 @@
 from fastapi import Request, HTTPException
 from subscriptions.api import jwt
-from subscriptions.auth import Subject
+from subscriptions.auth import Subject, Role
 
 
 def extract_tenant_id(request: Request) -> int:
@@ -13,9 +13,23 @@ def extract_tenant_id(request: Request) -> int:
 
 
 def subject(request: Request) -> Subject:
+    from subscriptions.plans import PlansViewer, PlansAdmin
+    from subscriptions.subscriptions import SubscriptionsViewer, SubscriptionsAdmin
+
     if auth_header := request.headers.get("Authorization"):
         _token_type, token = auth_header.split(maxsplit=1)
         decoded = jwt.decode(token)
-        return Subject(tenant_id=decoded.tenant_id, roles=[])
+        roles: set[Role] = set()
+        if "admin" in decoded.roles:
+            roles.add(PlansViewer())
+            roles.add(PlansAdmin())
+            roles.add(SubscriptionsViewer())
+            roles.add(SubscriptionsAdmin())
+
+        if "viewer" in decoded.roles:
+            roles.add(PlansViewer())
+            roles.add(SubscriptionsViewer())
+
+        return Subject(tenant_id=decoded.tenant_id, roles=list(roles))
     else:
         raise HTTPException(status_code=401, detail="Unauthorized")

@@ -1,6 +1,7 @@
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
+from subscriptions.auth import Subject, requires_role
 from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
 from subscriptions.plans._add_ons._requested_add_on import RequestedAddOn
 from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
@@ -8,6 +9,7 @@ from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
 from subscriptions.plans._plan_id import PlanId
 from subscriptions.plans._plan_dto import PlanDto
 from subscriptions.plans._plan import Plan
+from subscriptions.plans._role_objects import PlansAdmin, PlansViewer
 from subscriptions.shared.money import Money
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
@@ -17,16 +19,17 @@ class PlansFacade:
     def __init__(self, session: Session) -> None:
         self._session = session
 
+    @requires_role(PlansAdmin)
     def add(
         self,
-        tenant_id: int,
+        subject: Subject,
         name: str,
         price: Money,
         description: str,
         add_ons: list[UnitPriceAddOn | FlatPriceAddOn | TieredAddOn],
     ) -> PlanDto:
         plan = Plan(
-            tenant_id=tenant_id,
+            tenant_id=subject.tenant_id,
             name=name,
             price=price,
             description=description,
@@ -36,13 +39,17 @@ class PlansFacade:
         self._session.commit()
         return PlanDto.model_validate(plan)
 
-    def get_all(self, tenant_id: int) -> list[PlanDto]:
-        stmt = select(Plan).filter(Plan.tenant_id == tenant_id)
+    @requires_role(PlansViewer)
+    def get_all(self, subject: Subject) -> list[PlanDto]:
+        stmt = select(Plan).filter(Plan.tenant_id == subject.tenant_id)
         plans = self._session.execute(stmt).scalars().all()
         return [PlanDto.model_validate(plan) for plan in plans]
 
-    def delete(self, tenant_id: int, plan_id: int) -> None:
-        stmt = delete(Plan).filter(Plan.tenant_id == tenant_id, Plan.id == plan_id)
+    @requires_role(PlansAdmin)
+    def delete(self, subject: Subject, plan_id: int) -> None:
+        stmt = delete(Plan).filter(
+            Plan.tenant_id == subject.tenant_id, Plan.id == plan_id
+        )
         self._session.execute(stmt)
         self._session.commit()
 
