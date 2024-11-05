@@ -1,0 +1,21 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(subscriptions, "Subscriptions") {
+    Component(subscriptionsComponent, "Subscriptions", "Component")
+    Component(plansComponent, "Plans", "Component")
+    Component(accountsComponent, "Accounts", "Component")
+    Component(paymentsComponent, "Payments", "Component")
+    Component(sharedComponent, "Shared", "Component")
+}
+
+Rel_D(subscriptionsComponent, paymentsComponent, "uses")
+Rel_D(accountsComponent, paymentsComponent, "uses")
+Rel_L(subscriptionsComponent, plansComponent, "uses")
+
+Rel_D(subscriptionsComponent, sharedComponent, "uses")
+Rel_D(plansComponent, sharedComponent, "uses")
+Rel_D(accountsComponent, sharedComponent, "uses")
+Rel_D(paymentsComponent, sharedComponent, "uses")
+
+@enduml
