@@ -1,0 +1,10 @@
+modules = []
+exclude = [
+    ".*__pycache__",
+    ".*egg-info",
+    "docs",
+    "tests",
+]
+source_roots = [
+    ".",
+]
