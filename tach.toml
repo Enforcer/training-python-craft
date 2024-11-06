@@ -1,4 +1,3 @@
-modules = []
 exclude = [
     ".*__pycache__",
     ".*egg-info",
@@ -7,4 +6,15 @@ exclude = [
 ]
 source_roots = [
     ".",
+]
+modules = [
+    { path = "subscriptions.accounts", depends_on = [] },
+    { path = "subscriptions.api", depends_on = [] },
+    { path = "subscriptions.auth", depends_on = [] },
+    { path = "subscriptions.main", depends_on = [] },
+    { path = "subscriptions.payments", depends_on = [] },
+    { path = "subscriptions.plans", depends_on = [] },
+    { path = "subscriptions.settings", depends_on = [] },
+    { path = "subscriptions.shared", depends_on = [] },
+    { path = "subscriptions.subscriptions", depends_on = [] },
 ]
