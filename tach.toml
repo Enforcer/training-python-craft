@@ -7,14 +7,81 @@ exclude = [
 source_roots = [
     ".",
 ]
-modules = [
-    { path = "subscriptions.accounts", depends_on = [] },
-    { path = "subscriptions.api", depends_on = [] },
-    { path = "subscriptions.auth", depends_on = [] },
-    { path = "subscriptions.main", depends_on = [] },
-    { path = "subscriptions.payments", depends_on = [] },
-    { path = "subscriptions.plans", depends_on = [] },
-    { path = "subscriptions.settings", depends_on = [] },
-    { path = "subscriptions.shared", depends_on = [] },
-    { path = "subscriptions.subscriptions", depends_on = [] },
+
+[[modules]]
+path = "<root>"
+depends_on = [
+    { path = "subscriptions.accounts" },
+    { path = "subscriptions.main" },
+    { path = "subscriptions.payments" },
+    { path = "subscriptions.shared" },
+]
+
+[[modules]]
+path = "subscriptions.accounts"
+depends_on = [
+    { path = "subscriptions.api" },
+    { path = "subscriptions.auth" },
+    { path = "subscriptions.main" },
+    { path = "subscriptions.payments" },
+    { path = "subscriptions.shared" },
+]
+
+[[modules]]
+path = "subscriptions.api"
+depends_on = [
+    { path = "subscriptions.accounts" },
+    { path = "subscriptions.auth" },
+    { path = "subscriptions.main" },
+    { path = "subscriptions.payments" },
+    { path = "subscriptions.plans" },
+    { path = "subscriptions.shared" },
+    { path = "subscriptions.subscriptions" },
+]
+
+[[modules]]
+path = "subscriptions.auth"
+depends_on = [
+    { path = "subscriptions.shared" },
+]
+
+[[modules]]
+path = "subscriptions.main"
+depends_on = [
+    { path = "subscriptions.settings" },
+]
+
+[[modules]]
+path = "subscriptions.payments"
+depends_on = [
+    { path = "subscriptions.main" },
+    { path = "subscriptions.shared" },
+]
+
+[[modules]]
+path = "subscriptions.plans"
+depends_on = [
+    { path = "subscriptions.api" },
+    { path = "subscriptions.auth" },
+    { path = "subscriptions.main" },
+    { path = "subscriptions.shared" },
+]
+
+[[modules]]
+path = "subscriptions.settings"
+depends_on = []
+
+[[modules]]
+path = "subscriptions.shared"
+depends_on = []
+
+[[modules]]
+path = "subscriptions.subscriptions"
+depends_on = [
+    { path = "subscriptions.api" },
+    { path = "subscriptions.auth" },
+    { path = "subscriptions.main" },
+    { path = "subscriptions.payments" },
+    { path = "subscriptions.plans" },
+    { path = "subscriptions.shared" },
 ]
