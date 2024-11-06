@@ -1,3 +1,4 @@
+from hashlib import sha256
 from typing import Iterator
 from fastapi.testclient import TestClient
 import pytest
@@ -11,7 +12,8 @@ from subscriptions.api.app import app
 
 @pytest.fixture()
 def setup_db(request: SubRequest) -> Iterator[None]:
-    db_name = request.node.name
+    test_name = request.node.name
+    db_name = f"test_{sha256(test_name.encode("utf-8")).hexdigest()[:50]}"
     engine = main_container[Engine]
     with engine.connect() as connection:
         connection.execution_options(isolation_level="AUTOCOMMIT")
