@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from subscriptions.shared.account_id import AccountId
-from subscriptions.main import SessionFactory, payments_settings
+from subscriptions.main import payments_settings, deps
 from subscriptions.payments._facade import PaymentsFacade
 
 router = APIRouter()
@@ -13,11 +13,12 @@ templates = Jinja2Templates(directory="templates")
 
 @router.get("/details")
 def get_enter_details_page(
-    request: Request, account_id: int, return_url: str = ""
+    request: Request,
+    account_id: int,
+    return_url: str = "",
+    payments: PaymentsFacade = deps.depends(PaymentsFacade),
 ) -> HTMLResponse:
-    session = SessionFactory()
     account_id = AccountId(account_id)
-    payments = PaymentsFacade(session=session)
     client_secret = payments.client_secret(account_id)
     return templates.TemplateResponse(
         request=request,

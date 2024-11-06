@@ -3,13 +3,11 @@ from pydantic import BaseModel, Field
 
 from subscriptions.api import subject
 from subscriptions.auth import Subject
-from subscriptions.main import SessionFactory
-from subscriptions.payments import PaymentsFacade
-from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn, PlansRepository
+from subscriptions.main import deps
+from subscriptions.plans import PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions._facade import SubscriptionsFacade
-from subscriptions.subscriptions._repository import SubscriptionsRepository
 from subscriptions.subscriptions._subscription_dto import SubscriptionDto
 from subscriptions.subscriptions._subscription_id import SubscriptionId
 
@@ -25,16 +23,12 @@ class Subscribe(BaseModel):
 
 @router.post("/subscriptions", status_code=201)
 def subscribe(
-    payload: Subscribe, subject: Subject = Depends(subject)
+    payload: Subscribe,
+    subject: Subject = Depends(subject),
+    subscriptions: SubscriptionsFacade = deps.depends(SubscriptionsFacade),
 ) -> SubscriptionDto:
-    session = SessionFactory()
-    payments_facade = PaymentsFacade(session=session)
-    plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
-    facade = SubscriptionsFacade(
-        session, SubscriptionsRepository(session), payments_facade, plans_facade
-    )
     try:
-        return facade.subscribe(
+        return subscriptions.subscribe(
             subject=subject,
             account_id=AccountId(payload.account_id),
             plan_id=PlanId(payload.plan_id),
@@ -47,15 +41,11 @@ def subscribe(
 
 @router.get("/subscriptions")
 def get_subscriptions(
-    account_id: int, subject: Subject = Depends(subject)
+    account_id: int,
+    subject: Subject = Depends(subject),
+    subscriptions: SubscriptionsFacade = deps.depends(SubscriptionsFacade),
 ) -> list[SubscriptionDto]:
-    session = SessionFactory()
-    payments_facade = PaymentsFacade(session=session)
-    plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
-    facade = SubscriptionsFacade(
-        session, SubscriptionsRepository(session), payments_facade, plans_facade
-    )
-    return facade.subscriptions(
+    return subscriptions.subscriptions(
         subject=subject,
         account_id=AccountId(account_id),
     )
@@ -71,14 +61,9 @@ def change_plan(
     subscription_id: int,
     payload: ChangePlanPayload,
     subject: Subject = Depends(subject),
+    subscriptions: SubscriptionsFacade = deps.depends(SubscriptionsFacade),
 ) -> SubscriptionDto:
-    session = SessionFactory()
-    payments_facade = PaymentsFacade(session=session)
-    plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
-    facade = SubscriptionsFacade(
-        session, SubscriptionsRepository(session), payments_facade, plans_facade
-    )
-    return facade.change_plan(
+    return subscriptions.change_plan(
         subject=subject,
         account_id=AccountId(payload.account_id),
         subscription_id=SubscriptionId(subscription_id),
