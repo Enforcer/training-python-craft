@@ -19,6 +19,7 @@ depends_on = [
 
 [[modules]]
 path = "subscriptions.accounts"
+strict = true
 depends_on = [
     { path = "subscriptions.api" },
     { path = "subscriptions.auth" },
@@ -29,6 +30,7 @@ depends_on = [
 
 [[modules]]
 path = "subscriptions.api"
+strict = true
 depends_on = [
     { path = "subscriptions.accounts" },
     { path = "subscriptions.auth" },
@@ -41,6 +43,7 @@ depends_on = [
 
 [[modules]]
 path = "subscriptions.auth"
+strict = true
 depends_on = [
     { path = "subscriptions.shared" },
 ]
@@ -53,6 +56,7 @@ depends_on = [
 
 [[modules]]
 path = "subscriptions.payments"
+strict = true
 depends_on = [
     { path = "subscriptions.main" },
     { path = "subscriptions.shared" },
@@ -60,6 +64,7 @@ depends_on = [
 
 [[modules]]
 path = "subscriptions.plans"
+strict = true
 depends_on = [
     { path = "subscriptions.api" },
     { path = "subscriptions.auth" },
@@ -77,6 +82,7 @@ depends_on = []
 
 [[modules]]
 path = "subscriptions.subscriptions"
+strict = true
 depends_on = [
     { path = "subscriptions.api" },
     { path = "subscriptions.auth" },
