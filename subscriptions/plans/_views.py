@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, APIRouter, Response
 from pydantic import BaseModel, Field
 
-from subscriptions.api.multitenancy import subject
+from subscriptions.api import subject
 from subscriptions.auth import Subject
 from subscriptions.main import Session
 from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn

@@ -1,4 +1,5 @@
 from subscriptions.plans._add_ons._requested_add_on import RequestedAddOn
+from subscriptions.plans._repository import PlansRepository
 from subscriptions.plans._role_objects import PlansAdmin, PlansViewer
 from subscriptions.plans._views import router as plans_router
 from subscriptions.plans._facade import PlansFacade
@@ -13,4 +14,5 @@ __all__ = [
     "RequestedAddOn",
     "PlansViewer",
     "PlansAdmin",
+    "PlansRepository",
 ]

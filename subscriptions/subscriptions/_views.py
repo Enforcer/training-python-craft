@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from subscriptions.api.multitenancy import subject
+from subscriptions.api import subject
 from subscriptions.auth import Subject
 from subscriptions.main import Session
 from subscriptions.payments import PaymentsFacade
-from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
-from subscriptions.plans._repository import PlansRepository
+from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn, PlansRepository
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions._facade import SubscriptionsFacade

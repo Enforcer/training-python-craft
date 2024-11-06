@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from subscriptions.accounts import AccountsFacade
-from subscriptions.api.multitenancy import subject
+from subscriptions.api import subject
 from subscriptions.auth import Subject
 
 from subscriptions.main import Session
