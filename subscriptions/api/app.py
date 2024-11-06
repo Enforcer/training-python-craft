@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from subscriptions.auth import Forbidden
-from subscriptions.main import Session
+from subscriptions.main import SessionFactory
 from subscriptions.payments import payments_router
 from subscriptions.plans import plans_router
 from subscriptions.subscriptions import subscriptions_router
@@ -22,7 +22,7 @@ async def close_session(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     response = await call_next(request)
-    Session.remove()
+    SessionFactory.remove()
     return response
 
 

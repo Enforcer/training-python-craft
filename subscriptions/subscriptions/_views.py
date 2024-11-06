@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 from subscriptions.api import subject
 from subscriptions.auth import Subject
-from subscriptions.main import Session
+from subscriptions.main import SessionFactory
 from subscriptions.payments import PaymentsFacade
 from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn, PlansRepository
 from subscriptions.shared.account_id import AccountId
@@ -27,7 +27,7 @@ class Subscribe(BaseModel):
 def subscribe(
     payload: Subscribe, subject: Subject = Depends(subject)
 ) -> SubscriptionDto:
-    session = Session()
+    session = SessionFactory()
     payments_facade = PaymentsFacade(session=session)
     plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
     facade = SubscriptionsFacade(
@@ -49,7 +49,7 @@ def subscribe(
 def get_subscriptions(
     account_id: int, subject: Subject = Depends(subject)
 ) -> list[SubscriptionDto]:
-    session = Session()
+    session = SessionFactory()
     payments_facade = PaymentsFacade(session=session)
     plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
     facade = SubscriptionsFacade(
@@ -72,7 +72,7 @@ def change_plan(
     payload: ChangePlanPayload,
     subject: Subject = Depends(subject),
 ) -> SubscriptionDto:
-    session = Session()
+    session = SessionFactory()
     payments_facade = PaymentsFacade(session=session)
     plans_facade = PlansFacade(session=session, repository=PlansRepository(session))
     facade = SubscriptionsFacade(

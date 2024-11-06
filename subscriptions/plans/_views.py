@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from subscriptions.api import subject
 from subscriptions.auth import Subject
-from subscriptions.main import Session
+from subscriptions.main import SessionFactory
 from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
 from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
 from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
@@ -28,7 +28,7 @@ class AddPlan(BaseModel):
 
 @router.post("/plans")
 def add_plan(payload: AddPlan, subject: Subject = Depends(subject)) -> PlanDto:
-    session = Session()
+    session = SessionFactory()
     plans = PlansFacade(session=session, repository=PlansRepository(session))
     return plans.add(
         subject,
@@ -41,14 +41,14 @@ def add_plan(payload: AddPlan, subject: Subject = Depends(subject)) -> PlanDto:
 
 @router.get("/plans")
 def get_plans(subject: Subject = Depends(subject)) -> list[PlanDto]:
-    session = Session()
+    session = SessionFactory()
     plans = PlansFacade(session=session, repository=PlansRepository(session))
     return plans.get_all(subject)
 
 
 @router.delete("/plans/{plan_id}")
 def delete_plan(plan_id: int, subject: Subject = Depends(subject)) -> Response:
-    session = Session()
+    session = SessionFactory()
     plans = PlansFacade(session=session, repository=PlansRepository(session))
     plans.delete(subject, plan_id)
     return Response(status_code=204)

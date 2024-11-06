@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock, seal
 import pytest
 import time_machine
 from _pytest.fixtures import SubRequest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Engine
 from stripe import (
     CardError,
     CustomerService,
@@ -17,7 +17,7 @@ from stripe import (
 from subscriptions.api import jwt
 from subscriptions.api.app import app
 from subscriptions.api.jwt import Payload
-from subscriptions.main import Session, engine
+from subscriptions.main import SessionFactory, container
 from fastapi.testclient import TestClient
 
 from subscriptions.payments import PaymentsFacade
@@ -32,6 +32,7 @@ from subscriptions.subscriptions._repository import SubscriptionsRepository
 @pytest.fixture(autouse=True)
 def setup_db(request: SubRequest) -> Iterator[None]:
     db_name = request.node.name
+    engine = container[Engine]
     with engine.connect() as connection:
         connection.execution_options(isolation_level="AUTOCOMMIT")
         connection.execute(text(f"DROP DATABASE IF EXISTS {db_name}"))
@@ -40,11 +41,11 @@ def setup_db(request: SubRequest) -> Iterator[None]:
     new_url = engine.url.set(database=db_name)
 
     test_engine = create_engine(new_url, echo=True)
-    Session.configure(bind=test_engine)
+    SessionFactory.configure(bind=test_engine)
     Base.metadata.create_all(test_engine)
     yield
     test_engine.dispose()
-    Session.remove()
+    SessionFactory.remove()
 
 
 @pytest.fixture()
@@ -185,7 +186,7 @@ def test_subscribing(client: TestClient) -> None:
                 subscription["next_renewal_at"]
             ) + timedelta(hours=3)
             with time_machine.travel(renewal_at):
-                session = Session()
+                session = SessionFactory()
                 facade = SubscriptionsFacade(
                     session,
                     SubscriptionsRepository(session),

@@ -5,7 +5,8 @@ fmt:
 .PHONY: lint
 lint:
 	uv run ruff check --fix
-	mypy tests/ subscriptions/
+	uv run mypy tests/ subscriptions/
+	uv run tach check
 
 .PHONY: qa
 qa: fmt lint
