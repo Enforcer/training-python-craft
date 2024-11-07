@@ -57,16 +57,20 @@ class SubscriptionsFacade:
         self._session.commit()
         return SubscriptionDto.model_validate(subscription)
 
+    @requires_role(SubscriptionsAdmin)
     def cancel(
         self,
+        subject: Subject,
         account_id: AccountId,
-        tenant_id: TenantId,
         subscription_id: SubscriptionId,
     ) -> None:
-        subscription = self._repository.get(tenant_id, account_id, subscription_id)
+        subscription = self._repository.get(
+            subject.tenant_id, account_id, subscription_id
+        )
         subscription.cancel()
         self._session.commit()
 
+    @requires_role(SubscriptionsAdmin)
     def change_plan(
         self,
         subject: Subject,

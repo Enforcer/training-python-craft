@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from subscriptions.api import subject
@@ -37,6 +37,19 @@ def subscribe(
         )
     except Exception as e:
         raise HTTPException(status_code=500) from e
+
+
+@router.delete("/subscriptions/{subscription_id}")
+def cancel_subscription(
+    subscription_id: int,
+    account_id: int,
+    subject: Subject = Depends(subject),
+    subscriptions: SubscriptionsFacade = deps.depends(SubscriptionsFacade),
+) -> Response:
+    subscriptions.cancel(
+        subject, AccountId(account_id), SubscriptionId(subscription_id)
+    )
+    return Response(status_code=204)
 
 
 @router.get("/subscriptions")
