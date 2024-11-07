@@ -4,8 +4,10 @@ from subscriptions.plans import RequestedAddOn, PlanId
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._renewal_calculation import calculate_next_renewal
-from subscriptions.subscriptions._subscription import Subscription
+from subscriptions.subscriptions._domain._renewal_calculation import (
+    calculate_next_renewal,
+)
+from subscriptions.subscriptions._domain._subscription import Subscription
 
 
 def build_new(

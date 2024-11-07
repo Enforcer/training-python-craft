@@ -14,8 +14,8 @@ from subscriptions.shared.money import Money
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
 from subscriptions.subscriptions import SubscriptionsAdmin, SubscriptionsViewer
-from subscriptions.subscriptions._facade import SubscriptionsFacade
-from subscriptions.subscriptions._subscription_dto import SubscriptionDto
+from subscriptions.subscriptions._app._facade import SubscriptionsFacade
+from subscriptions.subscriptions._app._subscription_dto import SubscriptionDto
 
 
 @pytest.fixture()

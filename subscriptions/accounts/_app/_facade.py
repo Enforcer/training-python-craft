@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from subscriptions.accounts._account import Account
-from subscriptions.accounts._role_objects import AccountsAdmin
+from subscriptions.accounts._domain._account import Account
+from subscriptions.accounts._app._role_objects import AccountsAdmin
 from subscriptions.auth import requires_role, Subject
 from subscriptions.payments import PaymentsFacade
 from subscriptions.shared.account_id import AccountId

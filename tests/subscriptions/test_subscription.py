@@ -4,7 +4,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._subscription import Subscription
+from subscriptions.subscriptions._domain._subscription import Subscription
 
 
 @pytest.fixture()

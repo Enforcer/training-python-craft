@@ -1,12 +1,14 @@
 import pytest
 
 from subscriptions.plans import RequestedAddOn
-from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
-from subscriptions.plans._add_ons._invalid_tier_requested import InvalidTierRequested
-from subscriptions.plans._add_ons._not_found import RequestedAddOnNotFound
-from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
-from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
-from subscriptions.plans._plan import Plan
+from subscriptions.plans._domain._add_ons._flat_price_add_on import FlatPriceAddOn
+from subscriptions.plans._domain._add_ons._invalid_tier_requested import (
+    InvalidTierRequested,
+)
+from subscriptions.plans._domain._add_ons._not_found import RequestedAddOnNotFound
+from subscriptions.plans._domain._add_ons._tiered_add_on import TieredAddOn
+from subscriptions.plans._domain._add_ons._unit_price_add_on import UnitPriceAddOn
+from subscriptions.plans._domain._plan import Plan
 from subscriptions.shared.money import Money
 from subscriptions.shared.term import Term
 

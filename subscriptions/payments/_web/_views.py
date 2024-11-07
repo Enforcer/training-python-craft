@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 
 from subscriptions.shared.account_id import AccountId
 from subscriptions.main import deps, StripePublishableKey
-from subscriptions.payments._facade import PaymentsFacade
+from subscriptions.payments._app._facade import PaymentsFacade
 
 router = APIRouter()
 

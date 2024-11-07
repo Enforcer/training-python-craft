@@ -3,9 +3,9 @@ from typing import assert_never
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from subscriptions.payments._customer import Customer
-from subscriptions.payments._payment import Payment
-from subscriptions.payments._stripe_gateway import (
+from subscriptions.payments._domain._customer import Customer
+from subscriptions.payments._domain._payment import Payment
+from subscriptions.payments._app._stripe_gateway import (
     StripeGateway,
     Success,
     Failure,

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import Annotated
 
-from subscriptions.plans._add_ons._invalid_tier_requested import InvalidTierRequested
+from subscriptions.plans._domain._add_ons._invalid_tier_requested import (
+    InvalidTierRequested,
+)
 from subscriptions.shared.money import Money, MoneyAnnotation
 
 

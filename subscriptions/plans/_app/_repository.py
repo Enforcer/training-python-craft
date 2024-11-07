@@ -3,7 +3,7 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from subscriptions.plans._plan import Plan
+from subscriptions.plans._domain._plan import Plan
 from subscriptions.shared.tenant_id import TenantId
 
 

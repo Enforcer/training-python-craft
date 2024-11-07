@@ -7,7 +7,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from subscriptions.plans import RequestedAddOn, PlanId
 from subscriptions.shared.sqlalchemy import Base, AsJSON
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._renewal_calculation import calculate_next_renewal
+from subscriptions.subscriptions._domain._renewal_calculation import (
+    calculate_next_renewal,
+)
 
 
 @dataclass(frozen=True)

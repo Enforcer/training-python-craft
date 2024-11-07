@@ -2,11 +2,11 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
-from subscriptions.plans._add_ons._not_found import RequestedAddOnNotFound
-from subscriptions.plans._add_ons._requested_add_on import RequestedAddOn
-from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
-from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
+from subscriptions.plans._domain._add_ons._flat_price_add_on import FlatPriceAddOn
+from subscriptions.plans._domain._add_ons._not_found import RequestedAddOnNotFound
+from subscriptions.plans._domain._add_ons._requested_add_on import RequestedAddOn
+from subscriptions.plans._domain._add_ons._tiered_add_on import TieredAddOn
+from subscriptions.plans._domain._add_ons._unit_price_add_on import UnitPriceAddOn
 from subscriptions.shared.money import MoneyType, Money
 from subscriptions.shared.sqlalchemy import Base, AsJSON
 from subscriptions.shared.term import Term

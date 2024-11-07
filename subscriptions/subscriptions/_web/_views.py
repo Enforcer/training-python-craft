@@ -7,9 +7,9 @@ from subscriptions.main import deps
 from subscriptions.plans import PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._facade import SubscriptionsFacade
-from subscriptions.subscriptions._subscription_dto import SubscriptionDto
-from subscriptions.subscriptions._subscription_id import SubscriptionId
+from subscriptions.subscriptions._app._facade import SubscriptionsFacade
+from subscriptions.subscriptions._app._subscription_dto import SubscriptionDto
+from subscriptions.subscriptions._domain._subscription_id import SubscriptionId
 
 router = APIRouter()
 

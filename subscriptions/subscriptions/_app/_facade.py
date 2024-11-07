@@ -6,14 +6,14 @@ from subscriptions.plans import PlansFacade, PlanId, RequestedAddOn
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._repository import SubscriptionsRepository
-from subscriptions.subscriptions._role_objects import (
+from subscriptions.subscriptions._app._repository import SubscriptionsRepository
+from subscriptions.subscriptions._app._role_objects import (
     SubscriptionsViewer,
     SubscriptionsAdmin,
 )
-from subscriptions.subscriptions._subscription_dto import SubscriptionDto
-from subscriptions.subscriptions._subscription_factory import build_new
-from subscriptions.subscriptions._subscription_id import SubscriptionId
+from subscriptions.subscriptions._app._subscription_dto import SubscriptionDto
+from subscriptions.subscriptions._domain._subscription_factory import build_new
+from subscriptions.subscriptions._domain._subscription_id import SubscriptionId
 
 
 class SubscriptionsFacade:

@@ -16,7 +16,7 @@ from subscriptions.api.jwt import Payload
 from fastapi.testclient import TestClient
 
 from subscriptions.shared.term import Term
-from subscriptions.subscriptions._facade import SubscriptionsFacade
+from subscriptions.subscriptions._app._facade import SubscriptionsFacade
 
 
 def auth_header(tenant_id: int) -> str:

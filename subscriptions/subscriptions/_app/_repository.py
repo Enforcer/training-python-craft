@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.tenant_id import TenantId
-from subscriptions.subscriptions._subscription import Subscription
-from subscriptions.subscriptions._subscription_id import SubscriptionId
+from subscriptions.subscriptions._domain._subscription import Subscription
+from subscriptions.subscriptions._domain._subscription_id import SubscriptionId
 
 
 class SubscriptionsRepository:

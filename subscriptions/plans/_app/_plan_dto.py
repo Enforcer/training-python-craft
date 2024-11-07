@@ -2,9 +2,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict
 
-from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
-from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
-from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
+from subscriptions.plans._domain._add_ons._flat_price_add_on import FlatPriceAddOn
+from subscriptions.plans._domain._add_ons._tiered_add_on import TieredAddOn
+from subscriptions.plans._domain._add_ons._unit_price_add_on import UnitPriceAddOn
 from subscriptions.shared.money import MoneyAnnotation, Money
 
 

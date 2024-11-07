@@ -6,11 +6,11 @@ from pydantic import BaseModel, Field
 from subscriptions.api import subject
 from subscriptions.auth import Subject
 from subscriptions.main import deps
-from subscriptions.plans._add_ons._flat_price_add_on import FlatPriceAddOn
-from subscriptions.plans._add_ons._tiered_add_on import TieredAddOn
-from subscriptions.plans._add_ons._unit_price_add_on import UnitPriceAddOn
-from subscriptions.plans._plan_dto import PlanDto
-from subscriptions.plans._facade import PlansFacade
+from subscriptions.plans._domain._add_ons._flat_price_add_on import FlatPriceAddOn
+from subscriptions.plans._domain._add_ons._tiered_add_on import TieredAddOn
+from subscriptions.plans._domain._add_ons._unit_price_add_on import UnitPriceAddOn
+from subscriptions.plans._app._plan_dto import PlanDto
+from subscriptions.plans._app._facade import PlansFacade
 from subscriptions.shared.money import MoneyAnnotation, Money
 
 router = APIRouter()
