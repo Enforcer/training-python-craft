@@ -4,4 +4,8 @@ from subscriptions.subscriptions._app._role_objects import (
     SubscriptionsAdmin,
 )
 
-__all__ = ["subscriptions_router", "SubscriptionsAdmin", "SubscriptionsViewer"]
+__all__ = [
+    "subscriptions_router",
+    "SubscriptionsAdmin",
+    "SubscriptionsViewer",
+]

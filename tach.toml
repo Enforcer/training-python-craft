@@ -12,6 +12,7 @@ source_roots = [
 path = "<root>"
 depends_on = [
     { path = "subscriptions.accounts" },
+    { path = "subscriptions.subscriptions" },
     { path = "subscriptions.main" },
     { path = "subscriptions.payments" },
     { path = "subscriptions.shared" },

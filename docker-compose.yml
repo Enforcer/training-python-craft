@@ -14,3 +14,33 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgres
+    environment:
+      - DB=postgres
+      - DB_PORT=5432
+      - POSTGRES_USER=subscriptions
+      - POSTGRES_PWD=subscriptions
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    image: temporalio/auto-setup:1.23.1.0
+    ports:
+      - 7233:7233
+    volumes:
+      - ./temporal:/etc/temporal/config/dynamicconfig
+    labels:
+      kompose.volume.type: configMap
+
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.27.2
+    ports:
+      - 8080:8080
