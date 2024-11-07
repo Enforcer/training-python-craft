@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from subscriptions.main import payments_settings
 from subscriptions.payments._customer import Customer
 from subscriptions.payments._payment import Payment
+from subscriptions.payments._stripe_gateway import StripeGateway
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.money import Money
 
@@ -18,10 +19,13 @@ class InternalError(Exception):
 
 
 class PaymentsFacade:
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, stripe_gateway: StripeGateway) -> None:
         self._session = session
+        self._stripe_gateway = stripe_gateway
+        # 👇 THIS should be removed 👇
         stripe_api_key = payments_settings.STRIPE_API_KEY
         self._client = stripe.StripeClient(api_key=stripe_api_key)
+        # ...up to this point.
 
     def register_account(self, account_id: AccountId, tenant_id: int) -> None:
         stripe_customer = self._client.customers.create()

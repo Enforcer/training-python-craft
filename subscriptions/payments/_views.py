@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from subscriptions.shared.account_id import AccountId
-from subscriptions.main import payments_settings, deps
+from subscriptions.main import deps, StripePublishableKey
 from subscriptions.payments._facade import PaymentsFacade
 
 router = APIRouter()
@@ -17,6 +17,7 @@ def get_enter_details_page(
     account_id: int,
     return_url: str = "",
     payments: PaymentsFacade = deps.depends(PaymentsFacade),
+    stripe_publishable_key: StripePublishableKey = deps.depends(StripePublishableKey),
 ) -> HTMLResponse:
     account_id = AccountId(account_id)
     client_secret = payments.client_secret(account_id)
@@ -25,7 +26,7 @@ def get_enter_details_page(
         name="payment_details.html",
         context={
             "client_secret": client_secret,
-            "publishable_key": payments_settings.STRIPE_PUBLISHABLE_KEY,
+            "publishable_key": stripe_publishable_key,
             "return_url": return_url or "http://localhost:8000/payments/details_saved",
         },
     )

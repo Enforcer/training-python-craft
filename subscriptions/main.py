@@ -1,5 +1,7 @@
 """Assembling the application."""
 
+from typing import NewType
+
 from lagom import Container
 from lagom.integrations.fast_api import FastApiIntegration
 
@@ -8,6 +10,10 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, scoped_session, Session
 
 from subscriptions.settings import PaymentsSettings
+
+StripeApiKey = NewType("StripeApiKey", str)
+StripePublishableKey = NewType("StripePublishableKey", str)
+
 
 container = Container()
 container[Engine] = create_engine(
@@ -20,14 +26,9 @@ container[Session] = lambda: SessionFactory()
 
 payments_settings = PaymentsSettings.model_validate({})
 
+container[StripeApiKey] = StripeApiKey(payments_settings.STRIPE_API_KEY)
+container[StripePublishableKey] = StripePublishableKey(
+    payments_settings.STRIPE_PUBLISHABLE_KEY
+)
+
 deps = FastApiIntegration(container)
-# How to use in FastAPI?
-# from subscriptions.main import deps
-#
-# Use like
-# @router.post("/subscriptions", status_code=201)
-# def subscribe(
-#     ...,
-#     # ! facade is injected by Lagom
-#     facade: SubscriptionsFacade = deps.depends(SubscriptionsFacade),
-# ) -> SubscriptionDto:
