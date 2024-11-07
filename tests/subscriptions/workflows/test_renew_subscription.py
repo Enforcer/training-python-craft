@@ -40,7 +40,11 @@ async def worker(client: Client) -> AsyncIterator[None]:
         client,
         task_queue="test-queue",
         workflows=[renewal.RenewSubscriptionWorkflow],
-        activities=[activities.hello_world],
+        activities=[
+            activities.charge_for_renewal,
+            activities.mark_as_success,
+            activities.mark_as_failure,
+        ],
     ):
         yield
 
@@ -97,18 +101,16 @@ async def test_hello_world(
                 add_ons=[],
             )
 
-        result = await client.execute_workflow(
+        await client.execute_workflow(
             renewal.RenewSubscriptionWorkflow.run,
             subscription_before.id,
             id="example_id",
             task_queue="test-queue",
         )
 
-    assert result == f"Hello, {subscription_before.id}!"  # hello world only
     subscriptions_after = subscriptions.subscriptions(subject, account_id)
     assert len(subscriptions_after) == 1
     subscription_after = subscriptions_after[0]
     assert subscription_before.next_renewal_at is not None
     assert subscription_after.next_renewal_at is not None
-    # Uncomment once implementation is done
-    # assert subscription_after.next_renewal_at > subscription_before.next_renewal_at
+    assert subscription_after.next_renewal_at > subscription_before.next_renewal_at
