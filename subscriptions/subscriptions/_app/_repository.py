@@ -46,3 +46,7 @@ class SubscriptionsRepository:
             Subscription.id == subscription_id,
         )
         return self._session.execute(stmt).scalars().one()
+
+    def get_by_id(self, subscription_id: SubscriptionId) -> Subscription:
+        stmt = select(Subscription).filter(Subscription.id == subscription_id)
+        return self._session.execute(stmt).scalars().one()
