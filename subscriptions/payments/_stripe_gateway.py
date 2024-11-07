@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypeAlias
 
 import stripe
 
@@ -7,6 +8,10 @@ from subscriptions.shared.money import Money
 
 
 class InternalError(Exception):
+    pass
+
+
+class ClientSecretUnavailable(ValueError):
     pass
 
 
@@ -30,9 +35,23 @@ class NoPaymentMethods:
     pass
 
 
+CustomerId: TypeAlias = str
+SetupIntentId: TypeAlias = str
+
+
 class StripeGateway:
     def __init__(self, stripe_api_key: StripeApiKey) -> None:
         self._client = stripe.StripeClient(api_key=stripe_api_key)
+
+    def setup_new_customer(self) -> tuple[CustomerId, SetupIntentId]:
+        stripe_customer = self._client.customers.create()
+        setup_intent = self._client.setup_intents.create(
+            params=dict(
+                customer=stripe_customer.id,
+                automatic_payment_methods={"enabled": True},
+            )
+        )
+        return stripe_customer.id, setup_intent.id
 
     def charge_with_first_available_method(
         self, customer_id: str, amount: Money
@@ -71,3 +90,9 @@ class StripeGateway:
                 return NeedsAuthentication(payment_intent_id)
 
             return Failure(payment_intent_id)
+
+    def get_client_secret(self, setup_intent_id: SetupIntentId) -> str:
+        setup_intent = self._client.setup_intents.retrieve(setup_intent_id)
+        if setup_intent.client_secret is None:
+            raise ClientSecretUnavailable()
+        return setup_intent.client_secret
