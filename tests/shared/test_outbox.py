@@ -24,7 +24,6 @@ def outbox_processor(container: Container) -> OutboxProcessor:
     return container.resolve(OutboxProcessor)
 
 
-@pytest.mark.xfail()
 def test_processes_messages(
     outbox: Outbox, session: Session, outbox_processor: OutboxProcessor
 ) -> None:
@@ -34,4 +33,6 @@ def test_processes_messages(
     with patch.object(Publisher, "publish") as publish_mock:
         outbox_processor.run_once()
 
-    publish_mock.assert_called_once_with()
+    publish_mock.assert_called_once_with(
+        "test", message={"hello": "world"}
+    )

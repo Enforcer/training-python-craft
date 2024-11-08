@@ -1,7 +1,8 @@
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, select
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import mapped_column, Mapped, Session
 
@@ -25,6 +26,8 @@ class Outbox:
 
 
 class OutboxProcessor:
+    BATCH_SIZE = 100
+
     def __init__(self, session: Session, publisher: Publisher) -> None:
         self._session = session
         self._publisher = publisher
@@ -32,7 +35,26 @@ class OutboxProcessor:
     def run_once(self) -> None:
         self._session.rollback()
         with self._session.begin():
-            pass
+            stmt = (
+                select(OutboxEntry)
+                .with_for_update(skip_locked=True)
+                .filter(OutboxEntry.retries_left >= 0)
+                .order_by(OutboxEntry.when_created)
+                .limit(self.BATCH_SIZE)
+            )
+            entries = self._session.execute(stmt).scalars().all()
+            for entry in entries:
+                try:
+                    self._publisher.publish(entry.queue, message=entry.data)
+                except Exception:
+                    entry.retries_left -= 1
+                    logging.exception(
+                        "Error while publishing OutboxEntry #%d", entry.id
+                    )
+                else:
+                    self._session.delete(entry)
+
+            self._session.commit()
 
 
 class OutboxEntry(Base):
