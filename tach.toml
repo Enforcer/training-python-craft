@@ -53,6 +53,7 @@ depends_on = [
 path = "subscriptions.main"
 depends_on = [
     { path = "subscriptions.settings" },
+    { path = "subscriptions.shared" },
 ]
 
 [[modules]]

@@ -14,6 +14,7 @@ from subscriptions.payments._app._stripe_gateway import (
 )
 from subscriptions.shared.account_id import AccountId
 from subscriptions.shared.money import Money
+from subscriptions.shared.mqlib import Publisher
 
 
 class InternalError(Exception):
@@ -21,9 +22,15 @@ class InternalError(Exception):
 
 
 class PaymentsFacade:
-    def __init__(self, session: Session, stripe_gateway: StripeGateway) -> None:
+    def __init__(
+        self,
+        session: Session,
+        stripe_gateway: StripeGateway,
+        publisher: Publisher,
+    ) -> None:
         self._session = session
         self._stripe_gateway = stripe_gateway
+        self._publisher = publisher
 
     def register_account(self, account_id: AccountId, tenant_id: int) -> None:
         customer_id, setup_intent_id = self._stripe_gateway.setup_new_customer()
@@ -59,6 +66,20 @@ class PaymentsFacade:
                 )
                 self._session.add(payment)
                 self._session.commit()
+                self._publisher.publish(
+                    "payments-events",
+                    message={
+                        "type": "payments.payment_made",
+                        "source": "subscriptions.payments",
+                        "message": {
+                            "payment_id": payment.id,
+                            "amount": {
+                                "amount": str(amount.amount),
+                                "currency": amount.currency,
+                            },
+                        },
+                    },
+                )
                 return True
             case Failure():
                 payment = Payment(

@@ -3,11 +3,15 @@ from typing import Iterator
 from fastapi.testclient import TestClient
 import pytest
 from _pytest.fixtures import SubRequest
+from kombu import Queue  # type: ignore[import-untyped]
 from lagom import Container
 from sqlalchemy import Engine, create_engine, text
+
+from subscriptions.shared.mqlib import PoolFactory
 from subscriptions.shared.sqlalchemy import Base
 from subscriptions.main import container as main_container, SessionFactory
 from subscriptions.api.app import app
+from subscriptions.shared.mqlib.testing import purge as purge_queue
 
 
 @pytest.fixture()
@@ -30,8 +34,15 @@ def setup_db(request: SubRequest) -> Iterator[None]:
     SessionFactory.remove()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def clean_rabbitmq() -> Iterator[None]:
+    yield
+    pool_factory = main_container.resolve(PoolFactory)
+    purge_queue(pool_factory, Queue("payments-events"))
+
+
 @pytest.fixture()
-def client(setup_db: None) -> Iterator[TestClient]:
+def client(setup_db: None, clean_rabbitmq: None) -> Iterator[TestClient]:
     # Assumption is that if someone is using api client
     # they'll need test DB
     with TestClient(app) as a_client:
