@@ -30,6 +30,7 @@ class OutboxProcessor:
         self._publisher = publisher
 
     def run_once(self) -> None:
+        self._session.rollback()
         with self._session.begin():
             pass
 
