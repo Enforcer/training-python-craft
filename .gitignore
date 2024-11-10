@@ -18,3 +18,5 @@ sandbox/
 # coverage info
 .coverage
 
+# dmypy status file
+.dmypy.json
